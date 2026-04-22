@@ -140,19 +140,31 @@ The MasterChef contract handles all core BBKFI staking pools and is the **only**
 | `userInfo` | Per-user staking balance and reward debt |
 | `allocPoint` | Weight determining how much of total emissions a pool receives |
 | `totalAllocPoint` | Sum of `allocPoint` across every pool |
-| `bbkfiPerBlock` | Global BBKFI tokens emitted per BSC block (currently `1e18` = 1 BBKFI) |
+| `bbkfiPerBlock` | Emission nominal do MasterChef por bloco (`1e18` = 1 BBKFI) |
 | `accBBKFIPerShare` | Accumulator (scaled by `1e12`) used for O(1) reward accounting |
 | `depositFeeBP` | Optional deposit fee in basis points, capped at 10000 (100%) |
 
 ### Per-block emission
 
-The MasterChef emits a fixed `bbkfiPerBlock` each block. That value is global, not per pool — each pool's share is:
+The MasterChef emits a fixed `bbkfiPerBlock` each block. In the current deployment this value is **1 BBKFI/block** (nominal). That value is global, not per pool — each pool's share is:
 
 ```
 poolReward(per block) = bbkfiPerBlock × (pool.allocPoint / totalAllocPoint)
 ```
 
+Because `bbkfiPerBlock` is fixed at `1e18` in this deployment and `updateEmissionRate` is not operational, emission cannot be increased above **1 BBKFI/block**.
+
 With `bbkfiPerBlock = 1 BBKFI` and `totalAllocPoint = 1000`, a pool with `allocPoint = 400` earns 0.4 BBKFI per block, distributed pro-rata among its stakers.
+
+### Effective emission (current setup)
+
+The protocol currently uses **ERTB (`pid = 50`)** as a limiter pool with high `allocPoint` and zero practical stake supply. This acts as a sink for part of the nominal emission, reducing the BBKFI effectively distributed to active user pools.
+
+- Nominal emission (`bbkfiPerBlock`): **1.0 BBKFI/block**
+- Effective user emission target: **0.2 BBKFI/block**
+- Mechanism: active pools share 20% of `totalAllocPoint`, while ERTB holds the remaining 80%
+
+In other words, the contract still computes rewards from `1 BBKFI/block`, but only ~`0.2 BBKFI/block` is effectively routed to the active farm/staking set.
 
 ### Dev fund
 
@@ -201,17 +213,27 @@ A small set of parameters can be changed by the MasterChef owner. Ownership is d
 |----------|-----------------|
 | `add(allocPoint, lpToken, depositFeeBP, withUpdate)` | Adds a new pool and its weight |
 | `set(pid, allocPoint, depositFeeBP, withUpdate)` | Re-weights a pool or changes its deposit fee |
-| `updateEmissionRate(bbkfiPerBlock)` | Changes the global per-block emission (calls `massUpdatePools` first so past rewards settle at the old rate) |
 | `dev(address)` | Rotates the dev recipient (only callable by the current dev) |
 | `setFeeAddress(address)` | Rotates the deposit-fee recipient (only callable by the current fee address) |
 
-Changing `allocPoint` redistributes the existing per-block emission — it does not create more BBKFI. Only `updateEmissionRate` changes the total mint speed.
+Changing `allocPoint` redistributes the existing per-block emission — it does not create more BBKFI. In the current setup, allocPoint rebalancing (including ERTB limiter weight) is the lever used to set effective user emission.
+
+### `updateEmissionRate` limitation in this deployment
+
+The source code includes `updateEmissionRate(bbkfiPerBlock)`, but in the deployed MasterChef this path is **not operational in practice** because it calls `massUpdatePools()`, which iterates every PID.
+
+One historical pool (`pid = 35`) points to the MasterChef address as `lpToken`, so `updatePool(35)` reverts when trying to call `balanceOf` on that non-ERC20 target. As a consequence:
+
+- `massUpdatePools()` reverts
+- `updateEmissionRate()` also reverts (it calls `massUpdatePools()` first)
+
+Because of this, the protocol currently controls emissions via allocPoint distribution and the ERTB limiter, not by changing `bbkfiPerBlock` on-chain.
 
 ### Supply implications
 
 - BBKFI has **no hard-coded maximum supply**; supply grows deterministically from `bbkfiPerBlock`.
 - Minting is gated by `onlyOwner` on the token, with MasterChef as the owner — no other contract or EOA can mint BBKFI.
-- Because emission is governance-controlled, long-term supply depends on future votes, not on a fixed schedule.
+- Because nominal emission is `1 BBKFI/block` and effective distribution is managed through allocPoints (including the ERTB limiter), long-term supply follows a deterministic on-chain schedule under the current configuration.
 
 ## SmartChef Pools
 
@@ -245,7 +267,7 @@ Because rewards are pre-funded (transferred into the contract at initialization)
 </Callout>
 
 - **BBKFI Token** — owned by the MasterChef. The only privileged action is `mint`.
-- **MasterChef** — owned by an admin (moving to governance). Privileged actions are limited to adding/re-weighting pools, rotating dev/fee addresses, and adjusting `bbkfiPerBlock`.
+- **MasterChef** — owned by an admin (moving to governance). Privileged actions are limited to adding/re-weighting pools and rotating dev/fee addresses.
 - **Router / Factory** — no privileged reward paths. Factory has a `feeToSetter` slot for the optional protocol fee.
 - **SmartChef pools** — each is owned by an admin that can end rewards early, recover accidentally-sent tokens (not the staked/reward tokens), and update the user limit.
 

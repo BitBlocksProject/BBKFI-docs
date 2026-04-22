@@ -48,7 +48,7 @@ Provide tokens to Uniswap V2-style pools and earn a share of the swap fees colle
 
 Two independent staking systems coexist, and users can participate in both:
 
-- **MasterChef farms** — stake BBKFI or LP tokens to earn BBKFI emissions. One contract running many pools, sharing a fixed global emission rate.
+- **MasterChef farms** — stake BBKFI or LP tokens to earn BBKFI emissions. One contract runs many pools with `1 BBKFI/block` nominal emission, currently configured to ~`0.2 BBKFI/block` effective distribution to active pools.
 - **SmartChef pools** — stake a token to earn a different pre-funded reward (e.g. BFIRE). Each pool is its own independent contract with a defined start and end block.
 
 → [Earn guide](/guides/earn) · [Tokenomics](/introduction/tokenomics)
@@ -57,7 +57,6 @@ Two independent staking systems coexist, and users can participate in both:
 
 BBKFI is the governance token of the protocol. Holders can propose and vote on parameter changes that are executed on-chain — not decided off-chain and applied later. Typical scope includes:
 
-- Adjusting the MasterChef global emission rate (`bbkfiPerBlock`).
 - Adding new farms and reweighting existing ones.
 - Rotating dev / fee recipient addresses.
 - Other protocol parameter updates over time.
@@ -100,7 +99,7 @@ Move BBK between networks by minting and redeeming WBBK (Wrapped BitBlocks) on B
 - **Router / Factory / Pairs** power Swap and Liquidity.
 - **MasterChef** is the only contract that can mint BBKFI — it funds Earn farms.
 - **SmartChef** pools distribute other pre-funded rewards (like BFIRE) independently from BBKFI emission.
-- **Governance** sits above MasterChef, controlling the levers that shape long-term tokenomics.
+- **Governance** sits above MasterChef, controlling pool weights and other protocol parameters. In practice, effective BBKFI emissions are tuned via allocPoints (including the ERTB limiter pool), while nominal emission stays at `1 BBKFI/block`.
 
 ## Native tokens
 
@@ -117,7 +116,7 @@ Full addresses and technical details: [Tokenomics](/introduction/tokenomics) · 
 - **Non-custodial** — The protocol never takes custody of user funds. Router and staking contracts only hold tokens for the duration of a transaction or an explicit stake.
 - **Non-upgradeable** — Core contracts have no proxy. What you read on BscScan today is the code that runs.
 - **On-chain emissions** — Every BBKFI in circulation was minted by the MasterChef at a traceable block. No treasury mints, no admin mints.
-- **Governance-controlled economics** — Key tokenomic levers are callable only through governance, not by a single team wallet.
+- **Governance-controlled economics** — Core tokenomic levers (such as pool weighting and recipients) are callable only through governance, not by a single team wallet.
 
 ## Where to next
 

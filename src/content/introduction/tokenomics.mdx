@@ -33,38 +33,32 @@ BBKFI is not pre-minted. New tokens are created over time by the **MasterChef** 
 
 - **MasterChef:** [`0xAF7769F4347cc88eD50191eaca7c3ab380097b06`](https://bscscan.com/address/0xAF7769F4347cc88eD50191eaca7c3ab380097b06)
 
-### Fixed emission: 1 BBKFI per block
+### Current emission
 
-The protocol emits a fixed **1 BBKFI per block**.
+The current BBKFI emission distributed to active pools is **0.2 BBKFI per block**.
 
-On BNB Smart Chain, blocks happen roughly every 3 seconds, which translates to approximately **~28,800 BBKFI per day** distributed to the community.
+On BNB Smart Chain, blocks happen roughly every 3 seconds, which translates to approximately **~5,760 BBKFI per day** distributed to active pools.
 
 <Callout type="info">
-  If you stake in a pool, your share of that 1 BBKFI/block depends on (1) the pool's weight relative to other pools, and (2) your share of the tokens staked in that pool. See [Architecture → Staking System (MasterChef)](/contracts/architecture#staking-system-masterchef) for the full technical breakdown.
+  If you stake in an active pool, your share depends on (1) the pool's `allocPoint` relative to the active set, and (2) your share of that pool's total stake. See [Architecture → Staking System (MasterChef)](/contracts/architecture#staking-system-masterchef) for the full technical breakdown.
 </Callout>
 
 ### Per-pool emission
 
-The 1 BBKFI per block is split across pools according to their weight. The current allocation is:
+The effective `0.2 BBKFI/block` distributed to active pools is split according to pool weights. The current target allocation is:
 
-| Pool | BBKFI per block |
+| Pool | BBKFI per block (effective) |
 |------|-----------------|
-| BBKFI-BNB LP | 0.35 |
-| BBKFI-BUSD LP | 0.20 |
-| BBKFI-WBBK LP | 0.15 |
-| BBKFI staking | 0.10 |
-| BNB-BUSD LP | 0.10 |
-| WBBK-BNB LP | 0.05 |
-| WBBK staking | 0.0025 |
-| WBBK-BUSD LP | 0.0025 |
+| BBKFI-BNB LP | 0.07 |
+| BBKFI-BUSD LP | 0.04 |
+| BBKFI-WBBK LP | 0.03 |
+| BBKFI staking | 0.02 |
+| BNB-BUSD LP | 0.02 |
+| WBBK-BNB LP | 0.01 |
+| WBBK staking | 0.005 |
+| WBBK-BUSD LP | 0.005 |
 
-These are the per-block rewards distributed to **each pool as a whole** — your personal rewards depend on your share of that pool. The split is set on-chain via each pool's allocation weight and, like the global rate, can be adjusted through governance.
-
-### Emission is governed by voting
-
-The 1 BBKFI per block figure is the **current** emission rate, not a permanent constant. It can be changed by the protocol's **governance vote**: BBKFI holders can propose and vote to increase or decrease the emission rate over time — for example, to reduce inflation as the ecosystem matures, or to boost rewards during growth phases.
-
-This means tokenomics evolves with the community. Any change to the emission rate is executed on-chain through the governance system, not by any single team member.
+These are the per-block rewards distributed to **each active pool as a whole** — your personal rewards depend on your share of that pool. The split is set on-chain via `allocPoint`.
 
 ## WBBK Token
 
