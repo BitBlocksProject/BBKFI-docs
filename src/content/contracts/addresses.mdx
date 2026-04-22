@@ -1,0 +1,49 @@
+---
+title: Contract Addresses
+description: Deployed contract addresses for BitBlocks Finance on BSC Mainnet.
+---
+
+import { Callout } from 'nextra/components'
+import Image from 'next/image'
+
+# Contract Addresses
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+  <Image src="/images/networks/bnb-smart-chain.png" alt="BSC" width={24} height={24} />
+  <span>All contracts are deployed on <strong>Binance Smart Chain Mainnet (Chain ID: 56)</strong>.</span>
+</div>
+
+## Core Protocol
+
+| Contract | Address |
+|----------|---------|
+| **BBK Router (AMM V2)** | `0xdF81889adfB8CE92142f0089388Cc9E5edfee765` |
+| **BBK Factory** | `0x65b3cc7a7cb167221266fc93884717de2dbd074e` |
+| **MasterChef** | `0xAF7769F4347cc88eD50191eaca7c3ab380097b06` |
+
+## Token Addresses
+
+| Token | | Address |
+|-------|--|---------|
+| **BBKFI** | <Image src="/images/coins/BBKFI.png" alt="BBKFI" width={20} height={20} style={{display:'inline'}} /> | Verify on BscScan |
+| **BFIRE** | <Image src="/images/coins/BFIRE.png" alt="BFIRE" width={20} height={20} style={{display:'inline'}} /> | Verify on BscScan |
+| **wBBK V1** | <Image src="/logo.png" alt="wBBK v1" width={20} height={20} style={{display:'inline', borderRadius:'9999px'}} /> | Verify on BscScan |
+| **wVBBK (WBBK V2)** | <Image src="/logo.png" alt="wVBBK" width={20} height={20} style={{display:'inline', borderRadius:'9999px'}} /> | Verify on BscScan |
+
+<Callout type="warning">
+  Always verify contract addresses directly on [BscScan](https://bscscan.com) before interacting. The addresses above are correct as of the last documentation update but always confirm with the official sources.
+</Callout>
+
+## BscScan Links
+
+You can inspect any contract by pasting the address into the [BscScan search bar](https://bscscan.com). Verified contracts will show the source code under the **Contract** tab.
+
+## Adding BSC to MetaMask
+
+| Setting | Value |
+|---------|-------|
+| Network Name | Binance Smart Chain |
+| RPC URL | `https://bsc-dataseed.binance.org/` |
+| Chain ID | `56` |
+| Symbol | `BNB` |
+| Block Explorer | `https://bscscan.com` |

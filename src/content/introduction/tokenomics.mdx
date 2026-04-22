@@ -1,0 +1,116 @@
+---
+title: Tokenomics
+description: BBKFI token supply, distribution, and utility.
+---
+
+import { Callout } from 'nextra/components'
+import Image from 'next/image'
+
+# Tokenomics
+
+## BBKFI Token
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+  <Image src="/images/coins/BBKFI.png" alt="BBKFI" width={48} height={48} />
+  <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>BBKFI</span>
+</div>
+
+BBKFI is the primary token of the BitBlocks Finance ecosystem. It serves as both a governance token, 
+granting holders voting rights over protocol proposals and a utility token used throughout the platform.
+
+- **Token address:** [`0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4`](https://bscscan.com/token/0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4)
+- **Network:** BNB Smart Chain (Chain ID 56)
+
+### Utility
+
+- **Governance** — Vote on DAO proposals to shape the protocol's future.
+- **Staking** — Stake BBKFI in earn pools to receive staking rewards.
+- **Liquidity** — Provide BBKFI liquidity to earn a share of swap fees.
+
+## How BBKFI is Emitted
+
+BBKFI is not pre-minted. New tokens are created over time by the **MasterChef** contract and distributed to users who stake in the protocol's farms and pools.
+
+- **MasterChef:** [`0xAF7769F4347cc88eD50191eaca7c3ab380097b06`](https://bscscan.com/address/0xAF7769F4347cc88eD50191eaca7c3ab380097b06)
+
+### Fixed emission: 1 BBKFI per block
+
+The protocol emits a fixed **1 BBKFI per block**.
+
+On BNB Smart Chain, blocks happen roughly every 3 seconds, which translates to approximately **~28,800 BBKFI per day** distributed to the community.
+
+<Callout type="info">
+  If you stake in a pool, your share of that 1 BBKFI/block depends on (1) the pool's weight relative to other pools, and (2) your share of the tokens staked in that pool. See [Architecture → Staking System (MasterChef)](/contracts/architecture#staking-system-masterchef) for the full technical breakdown.
+</Callout>
+
+### Per-pool emission
+
+The 1 BBKFI per block is split across pools according to their weight. The current allocation is:
+
+| Pool | BBKFI per block |
+|------|-----------------|
+| BBKFI-BNB LP | 0.35 |
+| BBKFI-BUSD LP | 0.20 |
+| BBKFI-WBBK LP | 0.15 |
+| BBKFI staking | 0.10 |
+| BNB-BUSD LP | 0.10 |
+| WBBK-BNB LP | 0.05 |
+| WBBK staking | 0.0025 |
+| WBBK-BUSD LP | 0.0025 |
+
+These are the per-block rewards distributed to **each pool as a whole** — your personal rewards depend on your share of that pool. The split is set on-chain via each pool's allocation weight and, like the global rate, can be adjusted through governance.
+
+### Emission is governed by voting
+
+The 1 BBKFI per block figure is the **current** emission rate, not a permanent constant. It can be changed by the protocol's **governance vote**: BBKFI holders can propose and vote to increase or decrease the emission rate over time — for example, to reduce inflation as the ecosystem matures, or to boost rewards during growth phases.
+
+This means tokenomics evolves with the community. Any change to the emission rate is executed on-chain through the governance system, not by any single team member.
+
+## WBBK Token
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+  <Image src="/BBK.png" alt="wBBK" width={48} height={48} style={{ borderRadius: '9999px' }} />
+  <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>wBBK (WBBK V2)</span>
+</div>
+
+WBBK (Wrapped BitBlocks) is a BSC-compatible wrapped version of the BBK asset, with improved bridge compatibility.
+
+- **Token address:** [`0xBedF064586d332F4CDf26f02e16Ec9d4A831232B`](https://bscscan.com/token/0xBedF064586d332F4CDf26f02e16Ec9d4A831232B)
+- **Network:** BNB Smart Chain (Chain ID 56)
+
+WBBK can be converted through the [**WBBK Bridge**](https://bridge.bitblockscrypto.com/).
+
+## BFIRE Token
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+  <Image src="/images/coins/BFIRE.png" alt="BFIRE" width={48} height={48} />
+  <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>BFIRE (BitBlocks Fire)</span>
+</div>
+
+BFIRE was created as a **liquidity-boosting token for wBBK**. It is an optional, secondary asset used to incentivize wBBK liquidity — it is **not required** to use BitBlocks Finance. Users who do not care about wBBK liquidity incentives can safely ignore it.
+
+- **Token address:** [`0xE5599A12a8fF06A690ffD2790C54A37c74A43208`](https://bscscan.com/token/0xE5599A12a8fF06A690ffD2790C54A37c74A43208)
+- **Network:** BNB Smart Chain (Chain ID 56)
+- **Total supply:** 1,000,000 BFIRE (fixed)
+- **Max transaction:** 100,000 BFIRE
+
+### Transfer fee (1% reflection)
+
+Every BFIRE transfer is charged a **1% reflection fee**, redistributed pro-rata to **all current BFIRE holders** — holding BFIRE passively accrues more BFIRE from every transfer.
+
+The contract and the owner are excluded from the fee to allow internal operations (liquidity injection, pool funding) to run without tax drag.
+
+<Callout type="info">
+  The 1% fee applies to **every transfer**, including swaps and transfers between wallets. Plan accordingly when moving BFIRE.
+</Callout>
+
+## Want the technical details?
+
+The allocation math, reward accounting, dev-fund cut, deposit fees, and the exact on-chain controls that govern emission are documented in the smart contracts section:
+
+- [Contract Architecture → Staking System (MasterChef)](/contracts/architecture)
+- [Contract Addresses](/contracts/addresses)
+
+<Callout type="info">
+  For the most up-to-date supply figures and distribution details, refer to the on-chain data on [BscScan](https://bscscan.com).
+</Callout>

@@ -1,0 +1,58 @@
+---
+title: How to Swap
+description: Step-by-step guide to swapping tokens on BitBlocks Finance.
+---
+
+import { Steps, Callout, Tabs } from 'nextra/components'
+
+# How to Swap
+
+The BitBlocks Swap lets you exchange tokens instantly using the best available route — either the BitBlocks AMM or the 1inch aggregator.
+
+## Step-by-Step
+
+<Steps>
+
+### Go to Swap
+
+Click **Swap** in the left sidebar navigation.
+
+### Select the Tokens
+
+- **From** — Choose the token you want to sell (e.g., BNB).
+- **To** — Choose the token you want to receive (e.g., BBKFI).
+
+### Enter an Amount
+
+Type the amount in the **From** field. The estimated output amount will be calculated automatically.
+
+### Review the Quote
+
+Check the price impact and estimated output. The app shows:
+- Exchange rate
+- Price impact
+- Minimum received (accounting for slippage tolerance)
+
+### Approve (First Time Only)
+
+If this is your first time swapping a token, you will need to approve the router contract to spend it. Click **Approve [TOKEN]** and confirm in your wallet.
+
+### Confirm the Swap
+
+Click **Swap** and confirm the transaction in your wallet. Once the transaction is mined, your new tokens will appear in your wallet.
+
+</Steps>
+
+<Callout type="info">
+  **Routing**: By default, swaps route through the BitBlocks Router. For large trades, the app may automatically use the 1inch aggregator for a better price.
+</Callout>
+
+## Slippage Tolerance
+
+Slippage is the difference between the expected price and the actual execution price. You can adjust slippage tolerance in the swap settings (gear icon). The default is **0.5%**.
+
+| Slippage | Use Case |
+|----------|----------|
+| 0.1% | Stable pairs with deep liquidity |
+| 0.5% | Default — most tokens |
+| 1–5% | Low liquidity tokens or volatile markets |

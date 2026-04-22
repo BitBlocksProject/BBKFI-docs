@@ -1,0 +1,260 @@
+---
+title: Architecture
+description: Technical architecture of the BitBlocks Finance protocol.
+---
+
+import { Callout } from 'nextra/components'
+
+# Architecture
+
+BitBlocks Finance is built from a small set of focused smart contracts on **BNB Smart Chain (Chain ID 56)**. This page explains what each contract does, how they fit together, and links directly to the on-chain code on BscScan.
+
+For a full, copy-pasteable list of addresses, see [Contract Addresses](/contracts/addresses).
+
+## Contract Map
+
+```
+                        ┌────────────────────┐
+                        │   BBKFI Token      │ ← mint-gated
+                        └─────────┬──────────┘
+                                  │ onlyOwner mint
+                                  ▼
+┌─────────────┐   swap/LP    ┌──────────────┐   emits BBKFI   ┌──────────────┐
+│   User      │◀────────────▶│  BBK Router  │                 │  MasterChef  │
+└─────────────┘              └──────┬───────┘                 └──────┬───────┘
+       ▲                            │ queries                        │ stakes LP
+       │                            ▼                                ▼
+       │                    ┌──────────────┐                 ┌──────────────┐
+       │                    │  BBK Factory │──creates──▶     │  LP Pairs    │
+       │                    └──────────────┘                 └──────────────┘
+       │
+       │ BFIRE / extra rewards
+       ▼
+┌──────────────────┐
+│  SmartChef pools │   (independent per-pool contracts)
+└──────────────────┘
+```
+
+## AMM (Automated Market Maker)
+
+BitBlocks Finance uses a **Uniswap V2-compatible AMM**. Three components cooperate: a Factory that deploys pairs, Pair contracts that hold reserves, and a Router that is the user-facing entry point.
+
+### BBK Router
+
+- **Address:** [`0xdF81889adfB8CE92142f0089388Cc9E5edfee765`](https://bscscan.com/address/0xdF81889adfB8CE92142f0089388Cc9E5edfee765)
+- **Source:** [`contracts/bitblocks-router-bscscan/BitBlocksRouter.sol`](../../contracts/bitblocks-router-bscscan/BitBlocksRouter.sol)
+
+The router is the main contract users interact with. It:
+
+- Routes token swaps through one or more pool hops (`swapExactTokensForTokens`, `swapTokensForExactTokens`, and their BNB variants).
+- Handles adding and removing liquidity (`addLiquidity`, `addLiquidityETH`, `removeLiquidity`).
+- Enforces slippage limits via `amountOutMin` / `amountInMax` parameters — the swap reverts if the AMM cannot meet the caller's bounds.
+- Supports both token → token and BNB → token paths (wrapping/unwrapping WBNB internally).
+- Does not hold user funds: every call moves tokens from the user through the pair and back in the same transaction.
+
+### BBK Factory
+
+- **Address:** [`0x65b3cc7a7cb167221266fc93884717de2dbd074e`](https://bscscan.com/address/0x65b3cc7a7cb167221266fc93884717de2dbd074e)
+- **Source:** [`contracts/bitblocks-factory-bscscan/BitBlocksFactory.sol`](../../contracts/bitblocks-factory-bscscan/BitBlocksFactory.sol)
+
+The factory deploys and tracks every trading pair in the protocol.
+
+- Stores the mapping `getPair[tokenA][tokenB] → pair contract`.
+- `createPair(tokenA, tokenB)` deploys a new Pair contract deterministically via `CREATE2` — the pair address can be computed off-chain from the token pair and the factory's init-code hash.
+- Emits `PairCreated(token0, token1, pair, pairId)` whenever a new pool is deployed.
+- Holds `feeTo` / `feeToSetter` for the optional protocol fee on LP mint/burn.
+
+### LP Pairs
+
+Each liquidity pool is its own contract, deployed by the factory. Pair contracts:
+
+- Hold the reserves of `token0` and `token1`.
+- Implement `swap`, `mint`, `burn`, and `skim` / `sync`.
+- Issue ERC-20 LP tokens to liquidity providers, representing their share of the reserves.
+- Apply a **0.25% swap fee** (default V2-compatible setting) that stays in the pool, compounding value for LPs.
+
+### AMM Formula
+
+BitBlocks uses the constant product formula:
+
+```
+x * y = k
+```
+
+Where `x` and `y` are the reserves of the two tokens. Every swap must keep `k` non-decreasing (minus the swap fee collected for LPs), which is what prices trades automatically.
+
+## Swap Routing
+
+```
+User Input
+    │
+    ▼
+BitBlocks Router
+    │
+    ├─ Direct pair? ──── Yes ──── Execute swap in single hop
+    │
+    └─ No ─────────────────────── Find multi-hop path via Factory
+                                   └─ Execute across 2–3 hops
+```
+
+For large trades, the frontend may route via the **1inch aggregator** to source better liquidity across multiple DEXes. The on-chain settlement still happens through V2-compatible routers (BitBlocks or PancakeSwap), so no custom on-chain integration is required.
+
+## Tokens
+
+### BBKFI Token
+
+- **Address:** [`0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4`](https://bscscan.com/token/0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4)
+- **Source:** [`contracts/bitblocks-masterchef-bscscan/BBkFiToken.sol`](../../contracts/bitblocks-masterchef-bscscan/BBkFiToken.sol)
+- **Standard:** BEP-20 / ERC-20 compatible (18 decimals)
+
+BBKFI is the protocol's native governance and reward token. A key design choice: the `mint` function is `onlyOwner`, and the owner is the **MasterChef** contract. That means:
+
+- No team wallet, no multisig, no other contract can create BBKFI out of band.
+- Every token in circulation was minted by the MasterChef at a specific block number and is traceable on-chain.
+
+BBKFI is otherwise a standard BEP-20 with `transfer`, `approve`, `transferFrom`, and the usual events.
+
+### WBBK (Wrapped BitBlocks)
+
+Two versions coexist, with the V2 contract being the actively bridged one:
+
+- **WBBK V1:** [`0x9045b0eda6b6a556cf9b3d81c2db47411714f847`](https://bscscan.com/token/0x9045b0eda6b6a556cf9b3d81c2db47411714f847)
+- **wVBBK (WBBK V2):** [`0xBedF064586d332F4CDf26f02e16Ec9d4A831232B`](https://bscscan.com/token/0xBedF064586d332F4CDf26f02e16Ec9d4A831232B)
+
+WBBK is a BSC-compatible wrapped representation of the BBK asset. Users convert between the two versions using the WBBK Bridge available in the app.
+
+### BFIRE Token
+
+- **Address:** [`0xE5599A12a8fF06A690ffD2790C54A37c74A43208`](https://bscscan.com/token/0xE5599A12a8fF06A690ffD2790C54A37c74A43208)
+
+BFIRE is the secondary reward token. It is distributed exclusively by **SmartChef** pools — it is not minted by the MasterChef and does not interact with BBKFI's emission logic.
+
+## Staking System (MasterChef)
+
+The MasterChef contract handles all core BBKFI staking pools and is the **only** address with permission to mint BBKFI. Every new BBKFI in circulation is produced by this contract.
+
+- **Address:** [`0xAF7769F4347cc88eD50191eaca7c3ab380097b06`](https://bscscan.com/address/0xAF7769F4347cc88eD50191eaca7c3ab380097b06)
+- **Source:** [`contracts/bitblocks-masterchef-bscscan/MasterChef.sol`](../../contracts/bitblocks-masterchef-bscscan/MasterChef.sol)
+
+### Key Concepts
+
+| Term | Meaning |
+|------|---------|
+| `poolInfo` | Configuration for each pool (deposit token, allocation points, deposit fee) |
+| `userInfo` | Per-user staking balance and reward debt |
+| `allocPoint` | Weight determining how much of total emissions a pool receives |
+| `totalAllocPoint` | Sum of `allocPoint` across every pool |
+| `bbkfiPerBlock` | Global BBKFI tokens emitted per BSC block (currently `1e18` = 1 BBKFI) |
+| `accBBKFIPerShare` | Accumulator (scaled by `1e12`) used for O(1) reward accounting |
+| `depositFeeBP` | Optional deposit fee in basis points, capped at 10000 (100%) |
+
+### Per-block emission
+
+The MasterChef emits a fixed `bbkfiPerBlock` each block. That value is global, not per pool — each pool's share is:
+
+```
+poolReward(per block) = bbkfiPerBlock × (pool.allocPoint / totalAllocPoint)
+```
+
+With `bbkfiPerBlock = 1 BBKFI` and `totalAllocPoint = 1000`, a pool with `allocPoint = 400` earns 0.4 BBKFI per block, distributed pro-rata among its stakers.
+
+### Dev fund
+
+On every pool update that pays rewards, the MasterChef mints an **additional 10%** to the dev address (`bbkfi.mint(devaddr, bbkfiReward.div(10))`) on top of the per-block emission to stakers. So each active block effectively mints **1.1 BBKFI** total: 1.0 for stakers + 0.1 for the dev fund.
+
+### Reward accounting
+
+MasterChef uses the standard Sushi-style reward-debt pattern — O(1) math that avoids iterating users:
+
+```
+pending = user.amount × pool.accBBKFIPerShare / 1e12 − user.rewardDebt
+```
+
+On any interaction with a pool, `updatePool` is called first:
+
+1. Compute blocks elapsed since `lastRewardBlock`.
+2. Compute the pool's slice of emission (`multiplier × bbkfiPerBlock × allocPoint / totalAllocPoint`).
+3. Mint BBKFI to the MasterChef (and 10% to `devaddr`).
+4. Update `accBBKFIPerShare` and `lastRewardBlock`.
+
+### Deposit & Withdrawal Flow
+
+```
+User → deposit(pid, amount)
+  ├─ updatePool(pid)
+  ├─ Harvest pending rewards (if user.amount > 0)
+  ├─ Transfer LP tokens from user to MasterChef
+  ├─ If depositFeeBP > 0: forward fee slice to feeAddress
+  └─ Update user.amount and user.rewardDebt
+
+User → withdraw(pid, amount)
+  ├─ updatePool(pid)
+  ├─ Harvest pending rewards
+  ├─ Transfer LP tokens back to user
+  └─ Update user.amount and user.rewardDebt
+
+User → emergencyWithdraw(pid)
+  └─ Return LP without harvesting — forfeits pending rewards
+```
+
+### Owner-controlled parameters
+
+A small set of parameters can be changed by the MasterChef owner. Ownership is designed to be transferred to the governance contract once distribution is sufficient, so in practice these levers are pulled by BBKFI holder votes:
+
+| Function | What it changes |
+|----------|-----------------|
+| `add(allocPoint, lpToken, depositFeeBP, withUpdate)` | Adds a new pool and its weight |
+| `set(pid, allocPoint, depositFeeBP, withUpdate)` | Re-weights a pool or changes its deposit fee |
+| `updateEmissionRate(bbkfiPerBlock)` | Changes the global per-block emission (calls `massUpdatePools` first so past rewards settle at the old rate) |
+| `dev(address)` | Rotates the dev recipient (only callable by the current dev) |
+| `setFeeAddress(address)` | Rotates the deposit-fee recipient (only callable by the current fee address) |
+
+Changing `allocPoint` redistributes the existing per-block emission — it does not create more BBKFI. Only `updateEmissionRate` changes the total mint speed.
+
+### Supply implications
+
+- BBKFI has **no hard-coded maximum supply**; supply grows deterministically from `bbkfiPerBlock`.
+- Minting is gated by `onlyOwner` on the token, with MasterChef as the owner — no other contract or EOA can mint BBKFI.
+- Because emission is governance-controlled, long-term supply depends on future votes, not on a fixed schedule.
+
+## SmartChef Pools
+
+- **Source:** [`contracts/smartchef-bbkfi-bscscan/SmartChefBBKFI.sol`](../../contracts/smartchef-bbkfi-bscscan/SmartChefBBKFI.sol)
+
+SmartChef is a PancakeSwap-style "syrup pool" implementation. Unlike the MasterChef — which is a single contract running many pools — **each SmartChef pool is its own independent contract** deployed by a factory and initialized with its own parameters. The active SmartChef pool addresses are discovered on-chain by the app; see [Contract Addresses](/contracts/addresses) for the current set.
+
+### How it differs from MasterChef
+
+| | MasterChef | SmartChef |
+|--|------------|-----------|
+| Contracts | One contract, many pools | One contract **per** pool |
+| Reward token | Always BBKFI (minted on demand) | Any BEP-20 (e.g. BFIRE) — **pre-funded**, not minted |
+| Emission | Global `bbkfiPerBlock` split by `allocPoint` | Per-contract `rewardPerBlock` with a fixed start/end block window |
+| Lifetime | Open-ended | Bounded by `startBlock` / `bonusEndBlock` |
+| Deposit fee | Configurable per pool | Typically none |
+
+### Key fields
+
+- `stakedToken` — what the user deposits.
+- `rewardToken` — what the user earns (e.g. BFIRE).
+- `rewardPerBlock` — fixed emission for this specific pool.
+- `startBlock` / `bonusEndBlock` — the block range over which rewards are paid.
+- `poolLimitPerUser` — optional per-user stake cap.
+- `accTokenPerShare` — the same Sushi-style accumulator pattern used in MasterChef.
+
+Because rewards are pre-funded (transferred into the contract at initialization), SmartChef pools cannot mint new tokens and will stop paying if they run out — `bonusEndBlock` makes the end date explicit.
+
+## Ownership & Upgradeability
+
+<Callout type="info">
+  All core contracts are **non-upgradeable**. There is no proxy and no `upgradeTo` function. Any change in behavior requires deploying a new contract, so what you see on BscScan today is what will run.
+</Callout>
+
+- **BBKFI Token** — owned by the MasterChef. The only privileged action is `mint`.
+- **MasterChef** — owned by an admin (moving to governance). Privileged actions are limited to adding/re-weighting pools, rotating dev/fee addresses, and adjusting `bbkfiPerBlock`.
+- **Router / Factory** — no privileged reward paths. Factory has a `feeToSetter` slot for the optional protocol fee.
+- **SmartChef pools** — each is owned by an admin that can end rewards early, recover accidentally-sent tokens (not the staked/reward tokens), and update the user limit.
+
+## Source Code
+
+All verified contract source is mirrored under [`contracts/`](../../contracts/) in this repository alongside the deployed BscScan artifacts, so you can read or diff any of them locally without trusting a third party.

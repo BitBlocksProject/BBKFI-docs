@@ -1,0 +1,114 @@
+:root {
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-outfit), system-ui, sans-serif;
+}
+
+/* ── Nextra dark-theme overrides ── */
+.dark {
+  --nextra-primary-hue: 174;
+  --nextra-primary-saturation: 60%;
+}
+
+/* Dark background matching bitblocksfinancev2 */
+.dark body {
+  background-color: #050508;
+}
+
+/* Teal accent links */
+.dark a {
+  color: #2dd4bf;
+}
+
+.dark a:hover {
+  color: #14b8a6;
+}
+
+/* Headings use display font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* Body text */
+body {
+  font-family: var(--font-body);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #050508;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #2dd4bf, #a78bfa);
+  border-radius: 3px;
+}
+
+/* ── Sidebar footer (theme switcher + collapse button) polish ── */
+.nextra-sidebar-footer {
+  padding: 0.75rem 1rem !important;
+  background: rgba(11, 11, 18, 0.6);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  margin: 0 1rem !important;
+  width: auto !important;
+}
+
+.dark .nextra-sidebar-footer {
+  background: rgba(11, 11, 18, 0.6);
+}
+
+/* Page footer */
+.nextra-content footer,
+footer[class*="nextra"] {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.bbkfi-docs-footer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  min-height: 2rem;
+}
+
+.bbkfi-docs-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.bbkfi-docs-footer-logo {
+  border-radius: 4px;
+}
+
+.bbkfi-docs-footer-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2dd4bf;
+  white-space: nowrap;
+}
+
+.bbkfi-docs-footer-copy {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  text-wrap: balance;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .bbkfi-docs-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .bbkfi-docs-footer-copy {
+    font-size: 0.75rem;
+  }
+}

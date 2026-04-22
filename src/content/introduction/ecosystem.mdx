@@ -1,0 +1,133 @@
+---
+title: Ecosystem Overview
+description: A high-level overview of all products within the BitBlocks Finance ecosystem.
+---
+
+import { Callout, Cards } from 'nextra/components'
+
+# Ecosystem Overview
+
+BitBlocks Finance is a full DeFi suite — swap, liquidity, staking, governance, and a cross-chain bridge — accessible from a single interface and running entirely on **BNB Smart Chain (Chain ID 56)**. Every product is built on non-custodial, open-source smart contracts: funds stay in your wallet until the moment a transaction is executed.
+
+## Products
+
+### Swap
+
+Exchange any supported token pair instantly. Instead of locking you into a single liquidity source, the swap engine **queries multiple routes in parallel** and picks the one with the best output for your trade:
+
+- **BitBlocks Router** — the protocol's native V2 AMM.
+- **PancakeSwap Routes** — includes the PancakeSwap V2 router and all routes reachable through the PancakeSwap Smart Router (V2 + V3 + Stable pools).
+- **1inch aggregator** — pulls liquidity from many DEXes across BSC.
+
+Every quote is compared live and the best one is offered to the user. On top of the DEX-level trading fees, the frontend fee layer is:
+
+| Route | Frontend fee |
+|-------|--------------|
+| **BitBlocks Router** | 0% (always free) |
+| **PancakeSwap Routes** | 0% today (a 0.15% fee is planned in the future) |
+| **1inch** | 0.15% |
+
+Other swap guarantees:
+
+- User-defined slippage limits — a trade reverts rather than executing at a worse price.
+- Non-custodial — the router moves tokens in and out in the same transaction; no balance is ever held by the app.
+
+→ [Swap guide](/guides/swap)
+
+### Liquidity
+
+Provide tokens to Uniswap V2-style pools and earn a share of the swap fees collected by that pair. Adding liquidity issues you LP tokens representing your share of the pool; burning them later returns the underlying reserves plus accumulated fees.
+
+- Open creation of new pairs through the **BBK Factory**.
+- LP tokens are standard BEP-20s — transferable, stakeable, composable.
+- LP positions can be staked in Earn farms to collect BBKFI rewards on top of swap fees.
+
+→ [Liquidity guide](/guides/liquidity)
+
+### Earn (Staking)
+
+Two independent staking systems coexist, and users can participate in both:
+
+- **MasterChef farms** — stake BBKFI or LP tokens to earn BBKFI emissions. One contract running many pools, sharing a fixed global emission rate.
+- **SmartChef pools** — stake a token to earn a different pre-funded reward (e.g. BFIRE). Each pool is its own independent contract with a defined start and end block.
+
+→ [Earn guide](/guides/earn) · [Tokenomics](/introduction/tokenomics)
+
+### Governance
+
+BBKFI is the governance token of the protocol. Holders can propose and vote on parameter changes that are executed on-chain — not decided off-chain and applied later. Typical scope includes:
+
+- Adjusting the MasterChef global emission rate (`bbkfiPerBlock`).
+- Adding new farms and reweighting existing ones.
+- Rotating dev / fee recipient addresses.
+- Other protocol parameter updates over time.
+
+### WBBK Bridge
+
+Move BBK between networks by minting and redeeming WBBK (Wrapped BitBlocks) on BNB Smart Chain. Two versions coexist; the current active one is **wVBBK (WBBK V2)**, with improved bridge compatibility.
+
+→ [bridge.bitblockscrypto.com](https://bridge.bitblockscrypto.com/)
+
+## How the pieces fit together
+
+```
+                               ┌────────────────────┐
+                               │     User Wallet    │
+                               └──────────┬─────────┘
+                                          │
+          ┌───────────┬───────────────────┼───────────────────┬───────────┐
+          ▼           ▼                   ▼                   ▼           ▼
+       ┌──────┐   ┌─────────┐       ┌──────────┐       ┌──────────┐  ┌──────────┐
+       │ Swap │   │Liquidity│       │   Earn   │       │Governance│  │  Bridge  │
+       └──┬───┘   └────┬────┘       └─────┬────┘       └─────┬────┘  └────┬─────┘
+          │            │                  │                  │            │
+          ▼            ▼                  ├── MasterChef ◀─┐ ▼            ▼
+       Router ──▶ Factory ──▶ Pairs ───▶ LP tokens         │ DAO       WBBK Bridge
+          │            │                  │                │  │
+          └────────────┴──── 1inch (opt.) │                │  └── votes on params
+                                          └── SmartChef    │
+                                              (BFIRE &     │
+                                               extra       ▼
+                                               rewards)   mints BBKFI
+                                                        (onlyOwner)
+                                                           ▲
+                                                           │
+                                                  ┌────────┴───────┐
+                                                  │   BBKFI Token  │
+                                                  └────────────────┘
+```
+
+- **Router / Factory / Pairs** power Swap and Liquidity.
+- **MasterChef** is the only contract that can mint BBKFI — it funds Earn farms.
+- **SmartChef** pools distribute other pre-funded rewards (like BFIRE) independently from BBKFI emission.
+- **Governance** sits above MasterChef, controlling the levers that shape long-term tokenomics.
+
+## Native tokens
+
+| Token | Role |
+|-------|------|
+| **BBKFI** | Governance + primary reward token, minted only by MasterChef |
+| **WBBK** | Wrapped BitBlocks — cross-chain representation of the BBK asset |
+| **BFIRE** | Secondary reward token distributed by SmartChef pools |
+
+Full addresses and technical details: [Tokenomics](/introduction/tokenomics) · [Contract Addresses](/contracts/addresses).
+
+## Design principles
+
+- **Non-custodial** — The protocol never takes custody of user funds. Router and staking contracts only hold tokens for the duration of a transaction or an explicit stake.
+- **Non-upgradeable** — Core contracts have no proxy. What you read on BscScan today is the code that runs.
+- **On-chain emissions** — Every BBKFI in circulation was minted by the MasterChef at a traceable block. No treasury mints, no admin mints.
+- **Governance-controlled economics** — Key tokenomic levers are callable only through governance, not by a single team wallet.
+
+## Where to next
+
+<Cards>
+  <Cards.Card title="Tokenomics" href="/introduction/tokenomics" arrow />
+  <Cards.Card title="Smart Contract Architecture" href="/contracts/architecture" arrow />
+  <Cards.Card title="Contract Addresses" href="/contracts/addresses" arrow />
+  <Cards.Card title="Earn Guide" href="/guides/earn" arrow />
+</Cards>
+
+<Callout type="info">
+  All contracts are deployed on **BNB Smart Chain Mainnet (Chain ID 56)**. Always confirm addresses on [BscScan](https://bscscan.com) before interacting.
+</Callout>

@@ -1,0 +1,32 @@
+---
+title: Smart Contracts Overview
+description: Technical overview of the BitBlocks Finance smart contract system.
+---
+
+import { Cards } from 'nextra/components'
+
+# Smart Contracts
+
+BitBlocks Finance is built on a set of audited, open smart contracts deployed on **Binance Smart Chain (BSC)**. The protocol uses a modified Uniswap V2 AMM paired with a MasterChef staking contract.
+
+## Contract System
+
+| Contract | Purpose |
+|----------|---------|
+| **BBK Router** | Executes swaps and liquidity operations |
+| **BBK Factory** | Creates and tracks all liquidity pool pairs |
+| **MasterChef** | Manages staking pools and reward distribution |
+| **LP Tokens** | ERC-20 tokens representing liquidity pool shares |
+
+## Security
+
+- All contracts are deployed with verified source code on BscScan
+- Non-upgradeable core contracts: ownership is renounced or held by a multisig
+- The protocol does not take custody of user funds at any point
+
+## Resources
+
+<Cards>
+  <Cards.Card title="Contract Addresses" href="/contracts/addresses" arrow />
+  <Cards.Card title="Architecture" href="/contracts/architecture" arrow />
+</Cards>
