@@ -42,7 +42,6 @@ BitBlocks Finance uses a **Uniswap V2-compatible AMM**. Three components coopera
 ### BBK Router
 
 - **Address:** [`0xdF81889adfB8CE92142f0089388Cc9E5edfee765`](https://bscscan.com/address/0xdF81889adfB8CE92142f0089388Cc9E5edfee765)
-- **Source:** [`contracts/bitblocks-router-bscscan/BitBlocksRouter.sol`](../../contracts/bitblocks-router-bscscan/BitBlocksRouter.sol)
 
 The router is the main contract users interact with. It:
 
@@ -55,7 +54,6 @@ The router is the main contract users interact with. It:
 ### BBK Factory
 
 - **Address:** [`0x65b3cc7a7cb167221266fc93884717de2dbd074e`](https://bscscan.com/address/0x65b3cc7a7cb167221266fc93884717de2dbd074e)
-- **Source:** [`contracts/bitblocks-factory-bscscan/BitBlocksFactory.sol`](../../contracts/bitblocks-factory-bscscan/BitBlocksFactory.sol)
 
 The factory deploys and tracks every trading pair in the protocol.
 
@@ -104,7 +102,6 @@ For large trades, the frontend may route via the **1inch aggregator** to source 
 ### BBKFI Token
 
 - **Address:** [`0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4`](https://bscscan.com/token/0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4)
-- **Source:** [`contracts/bitblocks-masterchef-bscscan/BBkFiToken.sol`](../../contracts/bitblocks-masterchef-bscscan/BBkFiToken.sol)
 - **Standard:** BEP-20 / ERC-20 compatible (18 decimals)
 
 BBKFI is the protocol's native governance and reward token. A key design choice: the `mint` function is `onlyOwner`, and the owner is the **MasterChef** contract. That means:
@@ -134,7 +131,6 @@ BFIRE is the secondary reward token. It is distributed exclusively by **SmartChe
 The MasterChef contract handles all core BBKFI staking pools and is the **only** address with permission to mint BBKFI. Every new BBKFI in circulation is produced by this contract.
 
 - **Address:** [`0xAF7769F4347cc88eD50191eaca7c3ab380097b06`](https://bscscan.com/address/0xAF7769F4347cc88eD50191eaca7c3ab380097b06)
-- **Source:** [`contracts/bitblocks-masterchef-bscscan/MasterChef.sol`](../../contracts/bitblocks-masterchef-bscscan/MasterChef.sol)
 
 ### Key Concepts
 
@@ -218,8 +214,6 @@ Changing `allocPoint` redistributes the existing per-block emission — it does 
 - Because emission is governance-controlled, long-term supply depends on future votes, not on a fixed schedule.
 
 ## SmartChef Pools
-
-- **Source:** [`contracts/smartchef-bbkfi-bscscan/SmartChefBBKFI.sol`](../../contracts/smartchef-bbkfi-bscscan/SmartChefBBKFI.sol)
 
 SmartChef is a PancakeSwap-style "syrup pool" implementation. Unlike the MasterChef — which is a single contract running many pools — **each SmartChef pool is its own independent contract** deployed by a factory and initialized with its own parameters. The active SmartChef pool addresses are discovered on-chain by the app; see [Contract Addresses](/contracts/addresses) for the current set.
 
