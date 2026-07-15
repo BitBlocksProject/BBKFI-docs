@@ -10,9 +10,12 @@ const ROUTES = [
   'guides/swap',
   'guides/liquidity',
   'guides/earn',
+  'guides/governance',
+  'guides/safety',
   'contracts',
   'contracts/addresses',
   'contracts/architecture',
+  'contracts/frontend-reference',
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {

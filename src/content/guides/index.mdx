@@ -1,51 +1,70 @@
 ---
-title: Getting Started
-description: How to connect your wallet and start using BitBlocks Finance.
+title: Connect a wallet
+description: Prepare a wallet and connect safely to BitBlocks Finance on BNB Smart Chain.
 ---
 
-import { Steps, Callout } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 
-# Getting Started
+<PageIntro
+  eyebrow="Use the app · Setup"
+  title="Connect once. Verify every action."
+  description="BitBlocks Finance uses RainbowKit and wagmi to connect compatible wallets to BNB Smart Chain. The app can request a network switch, but only your wallet can approve it."
+>
+  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Chain ID 56</Pill><Pill tone="amber">BNB for gas</Pill></div>
+</PageIntro>
 
-Welcome to BitBlocks Finance. This guide will get you set up in a few minutes.
+## Before you connect
 
-## Prerequisites
+You need a browser wallet or WalletConnect-compatible mobile wallet, plus a small BNB balance for transaction fees. WalletConnect QR support also depends on the app's public WalletConnect project configuration.
 
-- A Web3 wallet (MetaMask, Trust Wallet, or any WalletConnect-compatible wallet)
-- BNB in your wallet to pay for gas fees on BSC
+<InfoGrid>
+  <InfoCard icon="shield" title="Check the domain"><p>Open <strong>bitblocks.finance</strong> directly. A wallet connection should never require your recovery phrase or private key.</p></InfoCard>
+  <InfoCard icon="wallet" title="Fund gas separately"><p>The token you intend to trade or stake cannot pay BSC gas. Keep enough native BNB for approval and execution transactions.</p></InfoCard>
+</InfoGrid>
 
-## Connect Your Wallet
+## Connect step by step
 
 <Steps>
 
-### Open the App
+### Open the official app
 
-Navigate to [bitblocks.finance](https://bitblocks.finance).
+Visit [bitblocks.finance](https://bitblocks.finance) and select **Connect Wallet** in the header.
 
-### Click "Connect Wallet"
+### Choose your wallet
 
-Click the **Connect Wallet** button in the top-right corner of the interface.
+Select an injected wallet or WalletConnect option. Complete the connection in the wallet itself.
 
-### Select Your Wallet
+### Use BNB Smart Chain
 
-Choose your wallet provider from the list (MetaMask, WalletConnect, etc.).
+The app is configured for the BSC mainnet chain (`56`). Approve the network switch if your wallet asks.
 
-### Switch to BSC
+### Confirm the connected account
 
-If prompted, approve switching your network to **Binance Smart Chain (Chain ID: 56)**.
+Check the shortened address in the app against the account shown by your wallet. Reads such as balances and positions use that account.
 
-### You're In
+### Choose an action
 
-Your wallet address will appear in the header. You can now access all features.
+Use the sidebar on desktop or bottom navigation on mobile to open **Swap**, **Liquidity**, **Earn**, **Tokens**, or **Dashboard**.
 
 </Steps>
 
-<Callout type="warning">
-  Always verify you are on the official domain **bitblocks.finance** before connecting your wallet. Bookmark it to avoid phishing sites.
+<Callout type="info">
+  Connecting a wallet is not a token approval and does not move funds. Approvals and transactions appear later as separate wallet prompts.
 </Callout>
 
-## Next Steps
+## A typical two-transaction flow
 
-- [How to Swap tokens](/guides/swap)
-- [Add or remove liquidity](/guides/liquidity)
-- [Stake tokens to earn rewards](/guides/earn)
+For an ERC-20 token, the first interaction with a contract often requires:
+
+1. **Approval or permit** — authorizes a specific spender to use the token.
+2. **Protocol action** — performs the swap, supplies liquidity, or deposits into a pool.
+
+Native BNB does not need ERC-20 approval. Some tokens support EIP-2612 permit signatures. In the current **swap** implementation, the app signs typed data and then submits `permit` to the token on-chain before swapping, so this path still uses gas. LP removal can instead pass its permit signature into the router's removal transaction.
+
+## Continue
+
+- [Swap tokens](/guides/swap)
+- [Manage liquidity](/guides/liquidity)
+- [Stake and earn](/guides/earn)
+- [Review the safety checklist](/guides/safety)

@@ -1,46 +1,49 @@
 ---
 title: What is BitBlocks Finance?
-description: An overview of the BitBlocks Finance DeFi ecosystem.
+description: A code-backed overview of the BitBlocks Finance interface and protocol.
 ---
 
-import Image from 'next/image'
+import { Callout } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill, RouteDiagram } from '@/components/docs-ui'
 
-<div style={{ marginBottom: '1.5rem' }}>
-  <Image
-    src="/hero.png"
-    alt="BitBlocks Finance"
-    width={1600}
-    height={600}
-    priority
-    style={{ width: '100%', height: 'auto', borderRadius: '0.75rem' }}
-  />
-</div>
+<PageIntro
+  eyebrow="Learn · Overview"
+  title="One interface for the BitBlocks DeFi stack."
+  description="BitBlocks Finance is a self-custodial interface for routed token swaps, V2 liquidity, on-chain staking, token discovery, and protocol metrics on BNB Smart Chain."
+>
+  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Chain ID 56</Pill><Pill tone="amber">Gas paid in BNB</Pill></div>
+</PageIntro>
 
-# What is BitBlocks Finance?
+## What is live in the app
 
-BitBlocks Finance is a decentralized finance protocol. It offers a self-custodial, 
-permissionless platform where users can swap tokens, provide liquidity and earn staking rewards , all without intermediaries.
+<InfoGrid>
+  <InfoCard icon="route" title="Swap"><p>Compares quotes from BitBlocks V2, PancakeSwap V2, PancakeSwap V3 and, when enabled, 1inch. The user can review route details before execution.</p></InfoCard>
+  <InfoCard icon="layers" title="Liquidity"><p>Creates or joins BitBlocks V2 pairs through the protocol router and factory. LP tokens represent the wallet's share of pool reserves.</p></InfoCard>
+  <InfoCard icon="coins" title="Earn"><p>Reads MasterChef farms and discovered SmartChef contracts, including pool state, deposit fees, reward windows, balances, and pending rewards.</p></InfoCard>
+  <InfoCard icon="book" title="Tokens & updates"><p>Provides a curated token directory, market context, protocol metrics, and product update pages inside the same dashboard shell.</p></InfoCard>
+</InfoGrid>
 
-## Core Principles
+<Callout type="warning" emoji="◌">
+  **Governance is not live in the main app yet.** The current Governance screen explicitly marks on-chain proposal workflows as “Coming soon” and links to the wider BitBlocks voting site. This documentation does not describe planned controls as already available.
+</Callout>
 
-- **Security** — Non-custodial smart contracts audited for safety. Users always control their own funds.
-- **Transparency** — All contract code is publicly verifiable on-chain. No hidden fees, no hidden logic.
-- **Growth** — Designed to scale. The protocol continuously adds value through liquidity incentives and ecosystem expansion.
+## How a transaction moves
 
-## Supported Network
+<RouteDiagram />
 
-| Network | Chain ID |
-|---------|----------|
-| Binance Smart Chain (BSC) | 56 |
+The app prepares transaction data, estimates output and presents the action. Your connected wallet remains the signer. An approval may be required before the router or staking contract can move an ERC-20 token.
 
-## Native Tokens
+## The operating model
 
-| Token | Description |
-|-------|-------------|
-| <span style={{display:'inline-flex', alignItems:'center', gap:'0.45rem'}}><Image src="/images/coins/BBKFI.png" alt="BBKFI" width={18} height={18} style={{borderRadius:'9999px'}} /><strong>BBKFI</strong></span> | Primary governance, utility and reward token of the protocol |
-| <span style={{display:'inline-flex', alignItems:'center', gap:'0.45rem'}}><Image src="/logo.png" alt="WBBK" width={18} height={18} style={{borderRadius:'9999px'}} /><strong>WBBK</strong></span> | Wrapped BitBlocks — BSC-compatible representation of the BBK asset |
-| <span style={{display:'inline-flex', alignItems:'center', gap:'0.45rem'}}><Image src="/images/coins/BFIRE.png" alt="BFIRE" width={18} height={18} style={{borderRadius:'9999px'}} /><strong>BFIRE</strong></span> | Secondary reward token distributed through staking pools |
+- **Self-custodial:** the frontend does not hold a wallet's assets. Tokens remain in the wallet unless the user supplies liquidity, deposits into a staking contract, or signs another on-chain action.
+- **Permissionless token selection:** curated assets are shown first, while the swap interface can resolve valid custom token addresses and merges the Trust Wallet BSC token list.
+- **On-chain quotes:** V2 and V3 routes read pools on BNB Smart Chain. Optional 1inch quotes are proxied server-side so its API credential is never sent to the browser.
+- **Explicit safeguards:** output minimums, transaction deadlines, route freshness, allowance checks, balance checks, and price-impact classification are implemented before execution.
 
-## Getting Started
+## What the interface cannot guarantee
 
-Connect your wallet (MetaMask, WalletConnect, or any RainbowKit-compatible wallet) to [bitblocksfinance.com](https://bitblocksfinance.com) and start exploring the ecosystem.
+The interface can validate inputs and simulate the route it knows about, but it cannot remove smart-contract risk, token-specific transfer behavior, market volatility, MEV, RPC failures, or impermanent loss. Always read the final wallet prompt.
+
+<Callout type="info">
+  Start with [Connect a wallet](/guides), then read the guide for the action you intend to take. For contract behavior and addresses, use the [Protocol reference](/contracts).
+</Callout>

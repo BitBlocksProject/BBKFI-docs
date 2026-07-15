@@ -1,5 +1,7 @@
-export default {
-  index: 'Overview',
-  tokenomics: 'Tokenomics',
-  ecosystem: 'Ecosystem',
+const meta = {
+  index: 'What is BitBlocks Finance?',
+  ecosystem: 'Ecosystem map',
+  tokenomics: 'Tokens and emissions',
 }
+
+export default meta

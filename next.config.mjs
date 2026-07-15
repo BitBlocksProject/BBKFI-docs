@@ -6,4 +6,7 @@ const withNextra = nextra({
 
 export default withNextra({
   trailingSlash: false,
+  turbopack: {
+    root: process.cwd(),
+  },
 })

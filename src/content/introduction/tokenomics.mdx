@@ -1,110 +1,60 @@
 ---
-title: Tokenomics
-description: BBKFI token supply, distribution, and utility.
+title: Tokens and emissions
+description: Code-backed roles and emission mechanics for BBKFI, WBBK, and BFIRE.
 ---
 
 import { Callout } from 'nextra/components'
-import Image from 'next/image'
+import { ContractCard, InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 
-# Tokenomics
+<PageIntro
+  eyebrow="Learn · Assets"
+  title="Three project assets. Different responsibilities."
+  description="BBKFI powers rewards and voting primitives, WBBK represents BitBlocks on BNB Smart Chain, and BFIRE appears as a secondary ecosystem and reward asset."
+>
+  <div style={{marginTop: '1rem'}}><Pill>18 decimals</Pill><Pill tone="amber">Verify addresses</Pill></div>
+</PageIntro>
 
-## BBKFI Token
+## Project tokens
 
-<div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-  <Image src="/images/coins/BBKFI.png" alt="BBKFI" width={48} height={48} />
-  <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>BBKFI</span>
-</div>
+<ContractCard name="BBKFI" kind="Reward & voting token" address="0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4" note="Curated throughout Swap, Earn, Liquidity and token pages." />
+<ContractCard name="WBBK V2" kind="Active wrapped BitBlocks" address="0xBedF064586d332F4CDf26f02e16Ec9d4A831232B" note="The WBBK version curated by the current interface." />
+<ContractCard name="WBBK V1" kind="Deprecated wrapped token" address="0x9045b0eda6b6a556cf9b3d81c2db47411714f847" note="Kept in routing bases and search for legacy liquidity; labeled deprecated." />
+<ContractCard name="BFIRE" kind="Secondary ecosystem token" address="0xE5599A12a8fF06A690ffD2790C54A37c74A43208" note="Available as an additional searchable asset and possible pool reward." />
 
-BBKFI is the primary token of the BitBlocks Finance ecosystem. It serves as both a governance token, 
-granting holders voting rights over protocol proposals and a utility token used throughout the platform.
+## BBKFI contract behavior
 
-- **Token address:** [`0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4`](https://bscscan.com/token/0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4)
-- **Network:** BNB Smart Chain (Chain ID 56)
+The verified BBKFI source is an ERC-20-compatible token with delegation checkpoints. Holders can delegate votes directly or by EIP-712 signature, and historical votes can be queried with `getPriorVotes`.
 
-### Utility
+Its `mint(address,uint256)` function is protected by `onlyOwner`. In the deployed system, the MasterChef is intended to own the token so reward minting follows pool accounting rather than an unrestricted public function.
 
-- **Governance** — Vote on DAO proposals to shape the protocol's future.
-- **Staking** — Stake BBKFI in earn pools to receive staking rewards.
-- **Liquidity** — Provide BBKFI liquidity to earn a share of swap fees.
+<InfoGrid>
+  <InfoCard icon="coins" title="Pool-weighted rewards"><p>MasterChef calculates each pool's reward from elapsed blocks, `bbkfiPerBlock`, the pool's `allocPoint`, and `totalAllocPoint`.</p></InfoCard>
+  <InfoCard icon="layers" title="Reward debt"><p>Each position stores an amount and reward debt. `accBBKFIPerShare` lets the contract account for rewards without iterating every staker.</p></InfoCard>
+  <InfoCard icon="route" title="Developer allocation"><p>When a MasterChef pool update mints rewards, the source also mints one tenth of that pool reward to the configured developer address.</p></InfoCard>
+  <InfoCard icon="shield" title="Mutable pool settings"><p>The MasterChef owner can add pools, adjust allocation points and set deposit fees. The current values must be read on-chain, not copied from a static page.</p></InfoCard>
+</InfoGrid>
 
-## How BBKFI is Emitted
+## The emission formula
 
-BBKFI is not pre-minted. New tokens are created over time by the **MasterChef** contract and distributed to users who stake in the protocol's farms and pools.
+```text
+poolReward = elapsedBlocks × bbkfiPerBlock × pool.allocPoint / totalAllocPoint
+userPending = user.amount × pool.accBBKFIPerShare / 1e12 − user.rewardDebt
+```
 
-- **MasterChef:** [`0xAF7769F4347cc88eD50191eaca7c3ab380097b06`](https://bscscan.com/address/0xAF7769F4347cc88eD50191eaca7c3ab380097b06)
+That formula describes the code. It does **not** make a static APR promise. APR also depends on token prices, total stake, pool weight, deposit fee, block cadence and the moment the pool was last updated.
 
-### Current emission
+## SmartChef rewards
 
-The current BBKFI emission distributed to active pools is **0.2 BBKFI per block**.
+SmartChef pools do not use the shared MasterChef emission. Each discovered SmartChef address has its own:
 
-On BNB Smart Chain, blocks happen roughly every 3 seconds, which translates to approximately **~5,760 BBKFI per day** distributed to active pools.
+- staked token and reward token;
+- `rewardPerBlock`;
+- start and end block;
+- optional per-user limit;
+- pre-funded reward balance.
 
-<Callout type="info">
-  If you stake in an active pool, your share depends on (1) the pool's `allocPoint` relative to the active set, and (2) your share of that pool's total stake. See [Architecture → Staking System (MasterChef)](/contracts/architecture#staking-system-masterchef) for the full technical breakdown.
-</Callout>
+The owner can stop rewards early, and a pool stops accruing after its end block. The Earn screen reads these fields before showing an active, upcoming, or ended state.
 
-### Per-pool emission
-
-The effective `0.2 BBKFI/block` distributed to active pools is split according to pool weights. The current target allocation is:
-
-| Pool | BBKFI per block (effective) |
-|------|-----------------|
-| BBKFI-BNB LP | 0.07 |
-| BBKFI-BUSD LP | 0.04 |
-| BBKFI-WBBK LP | 0.03 |
-| BBKFI staking | 0.02 |
-| BNB-BUSD LP | 0.02 |
-| WBBK-BNB LP | 0.01 |
-| WBBK staking | 0.005 |
-| WBBK-BUSD LP | 0.005 |
-
-These are the per-block rewards distributed to **each active pool as a whole** — your personal rewards depend on your share of that pool. The split is set on-chain via `allocPoint`.
-
-## WBBK Token
-
-<div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-  <Image src="/BBK.png" alt="wBBK" width={48} height={48} style={{ borderRadius: '9999px' }} />
-  <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>wBBK (WBBK V2)</span>
-</div>
-
-WBBK (Wrapped BitBlocks) is a BSC-compatible wrapped version of the BBK asset, with improved bridge compatibility.
-
-- **Token address:** [`0xBedF064586d332F4CDf26f02e16Ec9d4A831232B`](https://bscscan.com/token/0xBedF064586d332F4CDf26f02e16Ec9d4A831232B)
-- **Network:** BNB Smart Chain (Chain ID 56)
-
-WBBK can be converted through the [**WBBK Bridge**](https://bridge.bitblockscrypto.com/).
-
-## BFIRE Token
-
-<div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-  <Image src="/images/coins/BFIRE.png" alt="BFIRE" width={48} height={48} />
-  <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>BFIRE (BitBlocks Fire)</span>
-</div>
-
-BFIRE was created as a **liquidity-boosting token for wBBK**. It is an optional, secondary asset used to incentivize wBBK liquidity — it is **not required** to use BitBlocks Finance. Users who do not care about wBBK liquidity incentives can safely ignore it.
-
-- **Token address:** [`0xE5599A12a8fF06A690ffD2790C54A37c74A43208`](https://bscscan.com/token/0xE5599A12a8fF06A690ffD2790C54A37c74A43208)
-- **Network:** BNB Smart Chain (Chain ID 56)
-- **Total supply:** 1,000,000 BFIRE (fixed)
-- **Max transaction:** 100,000 BFIRE
-
-### Transfer fee (1% reflection)
-
-Every BFIRE transfer is charged a **1% reflection fee**, redistributed pro-rata to **all current BFIRE holders** — holding BFIRE passively accrues more BFIRE from every transfer.
-
-The contract and the owner are excluded from the fee to allow internal operations (liquidity injection, pool funding) to run without tax drag.
-
-<Callout type="info">
-  The 1% fee applies to **every transfer**, including swaps and transfers between wallets. Plan accordingly when moving BFIRE.
-</Callout>
-
-## Want the technical details?
-
-The allocation math, reward accounting, dev-fund cut, deposit fees, and the exact on-chain controls that govern emission are documented in the smart contracts section:
-
-- [Contract Architecture → Staking System (MasterChef)](/contracts/architecture)
-- [Contract Addresses](/contracts/addresses)
-
-<Callout type="info">
-  For the most up-to-date supply figures and distribution details, refer to the on-chain data on [BscScan](https://bscscan.com).
+<Callout type="warning">
+  Token supply, pool weights and reward schedules are live state. Use the Earn screen and BscScan for current values. This page intentionally documents mechanisms rather than freezing changeable numbers into prose.
 </Callout>

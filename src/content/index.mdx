@@ -1,22 +1,50 @@
 ---
 title: BitBlocks Finance Documentation
-description: Official documentation for the BitBlocks Finance DeFi ecosystem on BSC.
+description: Code-backed guides and protocol reference for BitBlocks Finance on BNB Smart Chain.
+theme:
+  layout: full
+  sidebar: false
+  toc: false
+  breadcrumb: false
+  pagination: false
+  timestamp: false
+  copyPage: false
 ---
 
-import { Cards } from 'nextra/components'
-import Image from 'next/image'
+import { FeatureGrid, HomeHero, SourceOfTruth, StatsStrip } from '@/components/docs-ui'
 
-<div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-  <Image src="/images/coins/BBKFI.png" alt="BitBlocks Finance" width={64} height={64} style={{ borderRadius: '12px' }} />
-  <div>
-    <h1 style={{ margin: 0 }}>BitBlocks Finance</h1>
-    <p style={{ margin: 0, opacity: 0.6 }}>Your safe, transparent DeFi ecosystem — built to grow.</p>
+<div className="docs-home-shell">
+  <HomeHero />
+
+  <div className="docs-home-content">
+    <section className="docs-home-section">
+      <div className="docs-section-heading">
+        <div>
+          <div className="docs-eyebrow"><span />Explore the protocol</div>
+          <h2>From first connection to on-chain execution.</h2>
+        </div>
+        <p>Use the interface with context. Each guide explains what you will see, what your wallet will sign, and which contract receives the transaction.</p>
+      </div>
+
+      <FeatureGrid items={[
+        { icon: 'wallet', label: 'Setup', title: 'Get connected', description: 'Prepare a compatible wallet, switch to BNB Smart Chain, and understand approvals before your first transaction.', href: '/guides' },
+        { icon: 'route', label: 'Trade', title: 'Route a swap', description: 'See how BitBlocks compares V2, V3, and optional aggregator quotes while enforcing slippage and price-impact checks.', href: '/guides/swap' },
+        { icon: 'layers', label: 'Provide', title: 'Manage liquidity', description: 'Create or join a V2 pair, receive LP tokens, understand pool share, and remove liquidity safely.', href: '/guides/liquidity' },
+        { icon: 'coins', label: 'Earn', title: 'Stake assets', description: 'Compare MasterChef farms and time-bounded SmartChef pools, then stake, harvest, or withdraw.', href: '/guides/earn' },
+      ]} />
+    </section>
+
+    <SourceOfTruth />
+
+    <section className="docs-home-section">
+      <div className="docs-section-heading">
+        <div>
+          <div className="docs-eyebrow"><span />At a glance</div>
+          <h2>Defaults that shape every transaction.</h2>
+        </div>
+        <p>These values come from the current interface and verified BitBlocks V2 contracts. Provider availability and live pool conditions can still change.</p>
+      </div>
+      <StatsStrip />
+    </section>
   </div>
 </div>
-
-BitBlocks Finance is a decentralized finance (DeFi) platform running on the **Binance Smart Chain (BSC)**. It provides a complete suite of tools for swapping tokens, providing liquidity, staking for rewards, and participating in governance.
-
-
-<Cards>
-  <Cards.Card title="Introduction" href="/introduction" arrow />
-</Cards>

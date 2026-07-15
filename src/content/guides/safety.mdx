@@ -1,0 +1,62 @@
+---
+title: Safety and troubleshooting
+description: A practical pre-transaction checklist and troubleshooting guide for BitBlocks Finance.
+---
+
+import { Callout } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
+
+<PageIntro
+  eyebrow="Use the app · Safety"
+  title="Slow down at the signature boundary."
+  description="Most recoverable mistakes happen before a transaction is broadcast: the wrong domain, network, token, spender, amount, route, or slippage."
+>
+  <div style={{marginTop: '1rem'}}><Pill>Verify</Pill><Pill tone="amber">Simulate mentally</Pill><Pill tone="slate">Then sign</Pill></div>
+</PageIntro>
+
+## Pre-transaction checklist
+
+- The browser shows **bitblocks.finance** over HTTPS.
+- The wallet is connected to **BNB Smart Chain, chain ID 56**.
+- The account shown in the wallet matches the app.
+- The token contract is the intended asset—not only the same name or symbol.
+- Native BNB remains available for all required transactions.
+- The approval spender matches the route or pool you selected.
+- Minimum received, price impact, deposit fee, and transaction deadline are acceptable.
+- The wallet prompt calls the contract you expect.
+
+## Approval hygiene
+
+The app first tries maximum allowance in several flows, with exact-amount fallback where implemented. Maximum approval reduces repeat gas costs but leaves a reusable allowance until revoked.
+
+<Callout type="warning">
+  A permit signature is still an authorization. In Swap, the current implementation signs and then sends `permit` on-chain with a one-hour deadline and maximum allowance, so gas is still required. Read the spender, token, value and deadline before signing typed data.
+</Callout>
+
+## Common problems
+
+<InfoGrid>
+  <InfoCard icon="wallet" title="WalletConnect does not open"><p>The app's WalletConnect project ID may be missing or the wallet session may be stale. Try an injected wallet, disconnect the old session, or reload.</p></InfoCard>
+  <InfoCard icon="coins" title="Insufficient balance"><p>For native BNB, Max keeps a gas reserve. For ERC-20s, confirm decimals, wallet account, and whether tokens are currently staked as LP or farm principal.</p></InfoCard>
+  <InfoCard icon="route" title="No route found"><p>The pair may lack liquidity, an RPC may have failed, or every candidate provider may have returned an error. Try a smaller amount or a different pair.</p></InfoCard>
+  <InfoCard icon="shield" title="Transaction reverted"><p>Common causes include expired deadline, changed reserves, output below minimum, insufficient allowance, transfer-tax behavior, or an ended reward pool.</p></InfoCard>
+</InfoGrid>
+
+## When a quote changes
+
+The app tracks whether the quote still matches the current input. Market state can change between review and signing, so a fresh quote can produce a different output or route. Reject the wallet prompt if the final transaction no longer matches your intent.
+
+## Token-specific behavior
+
+The BitBlocks router includes supporting functions for fee-on-transfer tokens, but the frontend action path and third-party providers may not support every custom token behavior. Rebasing, blocklists, transfer limits, paused contracts, and honeypot logic are external to the interface.
+
+## Verify on BscScan
+
+Use [BscScan](https://bscscan.com) to inspect:
+
+- the transaction recipient (`to`);
+- emitted transfer, swap, mint, burn, deposit, and withdraw events;
+- current token allowances;
+- verified contract source and creator transactions.
+
+For official BitBlocks addresses, start with [Contract addresses](/contracts/addresses).

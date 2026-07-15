@@ -1,72 +1,81 @@
 ---
-title: Earn / Staking
-description: How to stake tokens and earn BBKFI and BFIRE rewards.
+title: Stake and earn
+description: Understand MasterChef farms and SmartChef reward pools before staking.
 ---
 
-import { Steps, Callout } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 
-# Earn / Staking
+<PageIntro
+  eyebrow="Use the app · Earn"
+  title="Read the pool, then commit the token."
+  description="Earn combines one multi-pool MasterChef with independently deployed SmartChef contracts. Their reward sources, timelines, and admin controls are different."
+>
+  <div style={{marginTop: '1rem'}}><Pill>MasterChef</Pill><Pill tone="violet">SmartChef</Pill><Pill tone="amber">Variable APR</Pill></div>
+</PageIntro>
 
-The **Earn** section lets you deposit tokens into staking pools powered by the MasterChef smart contract. In return, you earn BBKFI and/or BFIRE token rewards over time.
+## Compare pool systems
 
-## How Staking Works
+| | MasterChef | SmartChef |
+|---|---|---|
+| Contract model | One contract, many `pid` values | One contract per pool |
+| Reward | BBKFI minted through token ownership | Pre-funded reward token |
+| Schedule | Global per-block emission split by weight | Pool-specific start, end and rate |
+| Deposit fee | Configurable per pool | No deposit-fee field in this implementation |
+| Harvest | `deposit(pid, 0)` | `deposit(0)` |
+| Emergency exit | Returns stake, forfeits pending rewards | Returns stake, forfeits pending rewards |
 
-Each pool has an **emission rate** (tokens distributed per block) and a **multiplier** that determines what share of the total emissions the pool receives. Your reward is proportional to your stake relative to the total pool deposit.
-
-```
-Your Reward = (Your Stake / Total Pool Stake) × Pool Emission Rate × Blocks
-```
-
-## Stake Tokens
+## Stake in a pool
 
 <Steps>
 
-### Go to Earn
+### Open Earn and choose a status
 
-Click **Earn** in the sidebar to see all available staking pools.
+The screen groups available pools and derives active, upcoming, or ended state from current block data. Review token pair, pool type, reward asset, TVL, APR and timing.
 
-### Find a Pool
+### Open the pool modal
 
-Browse pools and review their APR, total staked value, and reward tokens.
+Select a pool to inspect wallet balance, amount already staked, pending rewards, total stake, deposit fee, reward rate, and—where applicable—the SmartChef countdown.
 
-### Click Stake
+### Choose Stake
 
-Click **Stake** on your chosen pool.
+Enter an amount or select **Max**. For MasterChef pools with a deposit fee, the next-day estimate uses the net deposited amount.
 
-### Enter Amount
+### Approve and deposit
 
-Type the amount you want to stake or click **Max** to stake your full balance.
+If allowance is insufficient, the app submits approval and then deposit. Confirm each transaction in the wallet.
 
-### Approve & Confirm
+### Track the position
 
-Approve the token spend if prompted, then confirm the staking transaction in your wallet.
+Pending rewards accrue according to the contract's accumulator and are refreshed from on-chain reads. USD metrics are estimates, not contract guarantees.
 
 </Steps>
 
-<Callout type="info">
-  After staking, your pending rewards accumulate automatically every block. You can harvest them at any time without unstaking.
+## Harvest or withdraw
+
+<Tabs items={['Harvest', 'Unstake', 'Emergency exit']}>
+  <Tabs.Tab>
+    Harvest claims pending rewards without changing principal. The frontend calls a zero-amount deposit on both supported pool types.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    Unstake returns the requested amount and also settles pending rewards as part of the contract call.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    Both contracts expose an emergency withdrawal path in source, but the standard modal focuses on normal withdraw. Emergency withdrawal forfeits pending rewards and should only be used when normal interaction is unavailable.
+  </Tabs.Tab>
+</Tabs>
+
+## What APR means here
+
+APR is computed from current reward rate, reward price, deposited value, pool weight and an assumed BSC block cadence. It can change when any input changes. It is not stored as a fixed percentage in the staking contract.
+
+<InfoGrid>
+  <InfoCard icon="coins" title="Check the reward asset"><p>A high token count is not the same as high value. Confirm the reward contract, price liquidity, and whether it can be sold.</p></InfoCard>
+  <InfoCard icon="layers" title="Check the deposit asset"><p>LP farms carry both token risk and impermanent-loss risk. Single-token pools still carry token and contract risk.</p></InfoCard>
+  <InfoCard icon="route" title="Check the schedule"><p>A SmartChef can be near its end block. MasterChef weights and deposit fees can be changed by authorized roles.</p></InfoCard>
+  <InfoCard icon="shield" title="Check admin controls"><p>SmartChef owners can stop rewards early and recover unrelated tokens. They cannot use `recoverWrongTokens` for the configured stake or reward token.</p></InfoCard>
+</InfoGrid>
+
+<Callout type="warning">
+  The interface discovers SmartChef contracts from a maintained candidate registry and validates them on-chain. A displayed pool is still not a promise of token quality, future APR, or reward liquidity.
 </Callout>
-
-## Harvest Rewards
-
-Click **Harvest** on any pool to claim your pending BBKFI / BFIRE rewards without touching your staked principal.
-
-## Unstake
-
-Click **Unstake**, enter the amount to withdraw, and confirm the transaction. Your tokens and any unharvested rewards will be returned to your wallet.
-
-## Pool Types
-
-BitBlocks offers two distinct staking systems. **MasterChef** pools mint BBKFI on demand and run indefinitely; **SmartChef** pools pay a pre-funded reward token (typically BFIRE) over a bounded block range.
-
-| Pool Type | System | Deposit Token | Reward Token | Duration |
-|-----------|--------|---------------|--------------|----------|
-| BBKFI Staking | MasterChef | BBKFI | BBKFI | Open-ended |
-| LP Farm | MasterChef | LP tokens (e.g. BBKFI-BNB) | BBKFI | Open-ended |
-| Syrup Pool | SmartChef | BBKFI (or other BEP-20) | BFIRE / partner token | Fixed block window |
-
-<Callout type="info">
-  MasterChef emissions are governed by `allocPoint` weights on a global per-block budget, so pool APRs shift as weights or total stake change. SmartChef pools have a fixed `rewardPerBlock` and stop paying at `bonusEndBlock` — check the end date before committing.
-</Callout>
-
-See [Architecture → Staking System](/contracts/architecture#staking-system-masterchef) for the full reward-accounting and emission details.

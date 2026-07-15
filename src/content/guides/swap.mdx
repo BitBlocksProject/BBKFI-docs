@@ -1,58 +1,91 @@
 ---
-title: How to Swap
-description: Step-by-step guide to swapping tokens on BitBlocks Finance.
+title: Swap tokens
+description: Quote, review, approve, and execute a routed token swap in BitBlocks Finance.
 ---
 
-import { Steps, Callout, Tabs } from 'nextra/components'
+import { Callout, Steps } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill, RouteDiagram } from '@/components/docs-ui'
 
-# How to Swap
+<PageIntro
+  eyebrow="Use the app · Swap"
+  title="Compare the route before you trade."
+  description="The swap screen probes several liquidity sources, ranks successful quotes by output, and lets you inspect alternatives before your wallet signs."
+>
+  <div style={{marginTop: '1rem'}}><Pill>Exact input</Pill><Pill tone="slate">5 minute deadline</Pill><Pill tone="amber">Price-impact guard</Pill></div>
+</PageIntro>
 
-The BitBlocks Swap lets you exchange tokens instantly using the best available route — either the BitBlocks AMM or the 1inch aggregator.
+## Quote providers
 
-## Step-by-Step
+<RouteDiagram />
+
+| Provider | Quote path | Execution target | Fee represented by the app |
+|---|---|---|---|
+| **BitBlocks** | V2 direct and multi-hop paths | BitBlocks Router | 0.25% LP fee per hop |
+| **PancakeSwap** | V2 direct and multi-hop paths | PancakeSwap V2 Router | 0.25% LP fee per hop |
+| **PancakeSwap V3** | Common V3 fee tiers | PancakeSwap Smart Router | Winning pool's fee tier |
+| **1inch** | Aggregated BSC route, when enabled | Live 1inch spender/router | 0.15% configured partner fee |
+
+The route engine uses WBNB, BUSD, USDT, ETH, BBKFI, WBBK V2, and legacy WBBK V1 as possible base assets for multi-hop discovery. A provider that errors or has no liquidity is excluded from the result.
+
+## Make a swap
 
 <Steps>
 
-### Go to Swap
+### Select the input and output tokens
 
-Click **Swap** in the left sidebar navigation.
+Choose from the curated list, search the merged BSC token list, or paste a valid token address. Confirm the symbol and contract address for custom tokens.
 
-### Select the Tokens
+### Enter the amount to sell
 
-- **From** — Choose the token you want to sell (e.g., BNB).
-- **To** — Choose the token you want to receive (e.g., BBKFI).
+The app quotes an **exact input** amount. Selecting **Max** for native BNB reserves a buffer for gas instead of using the entire balance.
 
-### Enter an Amount
+### Review the winning route
 
-Type the amount in the **From** field. The estimated output amount will be calculated automatically.
+Open trade details to compare output, minimum received, network cost, route hops, LP fee, and price impact. Alternative successful routes remain selectable.
 
-### Review the Quote
+### Set slippage if needed
 
-Check the price impact and estimated output. The app shows:
-- Exchange rate
-- Price impact
-- Minimum received (accounting for slippage tolerance)
+The default is **0.3%**. Presets are 0.3%, 0.5%, and 1%. Custom slippage is capped at 50%, with warnings for high values.
 
-### Approve (First Time Only)
+### Authorize the input token
 
-If this is your first time swapping a token, you will need to approve the router contract to spend it. Click **Approve [TOKEN]** and confirm in your wallet.
+For ERC-20 input, use EIP-2612 when supported or call `approve`. The current EIP-2612 path signs typed data and then submits the token's `permit` function on-chain before the swap; it is not a gasless combined swap. The spender is derived from the selected route, so changing routes can change the authorization target.
 
-### Confirm the Swap
+### Confirm the swap
 
-Click **Swap** and confirm the transaction in your wallet. Once the transaction is mined, your new tokens will appear in your wallet.
+Review the final modal, select **Swap**, and inspect the wallet prompt. The app waits for the transaction receipt and reports success or failure.
 
 </Steps>
 
-<Callout type="info">
-  **Routing**: By default, swaps route through the BitBlocks Router. For large trades, the app may automatically use the 1inch aggregator for a better price.
+## Price-impact policy
+
+For V2 and V3 quotes, the app compares the quoted output with a fee-adjusted mid-price:
+
+| Pure curve impact | Interface classification |
+|---|---|
+| Below 3% | Low |
+| 3% to below 5% | Medium |
+| 5% to below 15% | High |
+| 15% or more | Blocked |
+
+If a V2/V3 mid-price cannot be calculated, the app marks price impact unavailable instead of inventing a value. 1inch is treated as an opaque aggregate route, so local price impact is shown as unknown.
+
+<Callout type="warning">
+  Slippage tolerance is not a target price. It is the maximum deterioration accepted between quote and execution. A very high value exposes the trade to worse execution and front-running.
 </Callout>
 
-## Slippage Tolerance
+## BNB and WBNB
 
-Slippage is the difference between the expected price and the actual execution price. You can adjust slippage tolerance in the swap settings (gear icon). The default is **0.5%**.
+BNB ↔ WBNB is detected as a direct wrap or unwrap, not an AMM trade. Output is one-to-one before gas, price impact is zero, and no router quote is required.
 
-| Slippage | Use Case |
-|----------|----------|
-| 0.1% | Stable pairs with deep liquidity |
-| 0.5% | Default — most tokens |
-| 1–5% | Low liquidity tokens or volatile markets |
+## Shareable links
+
+The current swap page understands prefill parameters:
+
+```text
+/swap?buyToken=0x...
+/swap?tokenIn=0x...&buyToken=0x...
+/swap?amountIn=1.25&buyToken=0x...
+```
+
+Treat prefilled addresses as untrusted input until you verify the token.

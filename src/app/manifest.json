@@ -1,6 +1,9 @@
 {
-  "name": "Docs BBKFI",
-  "short_name": "Docs",
+  "name": "BitBlocks Finance Docs",
+  "short_name": "BBKFI Docs",
+  "description": "Guides and protocol reference for BitBlocks Finance on BNB Smart Chain.",
+  "lang": "en",
+  "start_url": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +18,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#071315",
+  "background_color": "#050909",
   "display": "standalone"
 }

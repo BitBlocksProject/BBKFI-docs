@@ -1,7 +1,7 @@
-export const SITE_URL = 'https://docs.bitblocksfinance.com'
+export const SITE_URL = 'https://docs.bitblocks.finance'
 export const SITE_NAME = 'BitBlocks Finance Docs'
 export const SITE_DESCRIPTION =
-  'Official documentation for the BitBlocks Finance DeFi ecosystem on BNB Smart Chain — swap, liquidity, staking, tokenomics, and smart contracts.'
+  'Understand and use BitBlocks Finance: routed swaps, liquidity, staking, tokens, risks, and protocol contracts on BNB Smart Chain.'
 
 export const SOCIAL = {
   twitter: 'https://x.com/BBKFI',
@@ -9,4 +9,12 @@ export const SOCIAL = {
   discord: 'https://discord.gg/6MaZmWE',
   telegram: 'https://t.me/bitblocksfinace',
   github: 'https://github.com/BitBlocksProject',
+}
+
+export const APP_URL = 'https://bitblocks.finance'
+export const NETWORK = {
+  name: 'BNB Smart Chain',
+  shortName: 'BSC',
+  chainId: 56,
+  explorer: 'https://bscscan.com',
 }

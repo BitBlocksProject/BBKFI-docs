@@ -1,49 +1,57 @@
 ---
-title: Contract Addresses
-description: Deployed contract addresses for BitBlocks Finance on BSC Mainnet.
+title: Contract addresses
+description: Protocol, token, and integration addresses configured by the current BitBlocks Finance frontend.
 ---
 
 import { Callout } from 'nextra/components'
-import Image from 'next/image'
+import { ContractCard, PageIntro, Pill } from '@/components/docs-ui'
 
-# Contract Addresses
+<PageIntro
+  eyebrow="Protocol reference · Addresses"
+  title="Verify the destination, not just the label."
+  description="The values below are taken from the current application configuration and mirrored verified source artifacts. Links open the address directly on BscScan."
+>
+  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Chain ID 56</Pill></div>
+</PageIntro>
 
-<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-  <Image src="/images/networks/bnb-smart-chain.png" alt="BSC" width={24} height={24} />
-  <span>All contracts are deployed on <strong>Binance Smart Chain Mainnet (Chain ID: 56)</strong>.</span>
-</div>
+## Core BitBlocks protocol
 
-## Core Protocol
+<ContractCard name="BitBlocks Router" kind="V2 AMM router" address="0xdF81889adfB8CE92142f0089388Cc9E5edfee765" note="Swap, add liquidity, remove liquidity, and BNB/WBNB handling." />
+<ContractCard name="BitBlocks Factory" kind="V2 pair factory" address="0x65b3cc7a7cb167221266fc93884717de2dbd074e" note="Creates and indexes BitBlocks pair contracts." />
+<ContractCard name="MasterChef" kind="Multi-pool rewards" address="0xAF7769F4347cc88eD50191eaca7c3ab380097b06" note="Staking positions, pool weights, deposit fees, and BBKFI rewards." />
 
-| Contract | Address |
-|----------|---------|
-| **BBK Router (AMM V2)** | `0xdF81889adfB8CE92142f0089388Cc9E5edfee765` |
-| **BBK Factory** | `0x65b3cc7a7cb167221266fc93884717de2dbd074e` |
-| **MasterChef** | `0xAF7769F4347cc88eD50191eaca7c3ab380097b06` |
+## Project tokens
 
-## Token Addresses
+<ContractCard name="BBKFI" kind="Token" address="0xfC8E68E30350c6603D3d29fCc8E676380C28FCf4" />
+<ContractCard name="WBBK V2" kind="Active wrapped BitBlocks" address="0xBedF064586d332F4CDf26f02e16Ec9d4A831232B" />
+<ContractCard name="WBBK V1" kind="Deprecated wrapped BitBlocks" address="0x9045b0eda6b6a556cf9b3d81c2db47411714f847" />
+<ContractCard name="BFIRE" kind="Ecosystem token" address="0xE5599A12a8fF06A690ffD2790C54A37c74A43208" />
 
-| Token | | Address |
-|-------|--|---------|
-| **BBKFI** | <Image src="/images/coins/BBKFI.png" alt="BBKFI" width={20} height={20} style={{display:'inline'}} /> | Verify on BscScan |
-| **BFIRE** | <Image src="/images/coins/BFIRE.png" alt="BFIRE" width={20} height={20} style={{display:'inline'}} /> | Verify on BscScan |
-| **wBBK V1** | <Image src="/logo.png" alt="wBBK v1" width={20} height={20} style={{display:'inline', borderRadius:'9999px'}} /> | Verify on BscScan |
-| **wVBBK (WBBK V2)** | <Image src="/logo.png" alt="wVBBK" width={20} height={20} style={{display:'inline', borderRadius:'9999px'}} /> | Verify on BscScan |
+## External swap infrastructure
+
+<ContractCard name="PancakeSwap V2 Router" kind="External integration" address="0x10ED43C718714eb63d5aA57B78B54704E256024E" />
+<ContractCard name="PancakeSwap Smart Router" kind="External integration" address="0x13f4EA83D0bd40E75C8222255bc855a974568Dd4" />
+<ContractCard name="PancakeSwap Quoter V2" kind="External read integration" address="0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997" />
+<ContractCard name="1inch Aggregation Router V6" kind="External fallback spender" address="0x111111125421cA6dc452d289314280a0f8842A65" note="The app prefers the live spender returned by 1inch when that provider is enabled." />
+
+## Common route assets
+
+| Asset | Address | Role |
+|---|---|---|
+| WBNB | `0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c` | Native BNB representation and routing base |
+| BUSD | `0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56` | Curated stablecoin and routing base |
+| USDT | `0x55d398326f99059fF775485246999027B3197955` | Curated stablecoin and routing base |
+| BTCB | `0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c` | Curated token page asset |
+| ETH | `0x2170Ed0880ac9A755fd29B2688956BD959F933F8` | Binance-Peg ETH and routing base |
+
+## SmartChef addresses
+
+The frontend maintains candidate addresses and validates SmartChef shape on-chain instead of treating one static address as the entire system. Each valid pool exposes its own `stakedToken`, `rewardToken`, `rewardPerBlock`, `startBlock`, and `bonusEndBlock`.
+
+The mirrored verified SmartChef implementation example is:
+
+<ContractCard name="SmartChefBBKFI" kind="Single reward pool" address="0x16636f8eF603cC18729EeC76e1314Ba72115d785" />
 
 <Callout type="warning">
-  Always verify contract addresses directly on [BscScan](https://bscscan.com) before interacting. The addresses above are correct as of the last documentation update but always confirm with the official sources.
+  Always compare the address in the wallet prompt with this page and BscScan. For 1inch, use the spender returned by the live provider rather than assuming the fallback will always be used.
 </Callout>
-
-## BscScan Links
-
-You can inspect any contract by pasting the address into the [BscScan search bar](https://bscscan.com). Verified contracts will show the source code under the **Contract** tab.
-
-## Adding BSC to MetaMask
-
-| Setting | Value |
-|---------|-------|
-| Network Name | Binance Smart Chain |
-| RPC URL | `https://bsc-dataseed.binance.org/` |
-| Chain ID | `56` |
-| Symbol | `BNB` |
-| Block Explorer | `https://bscscan.com` |

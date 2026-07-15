@@ -1,32 +1,45 @@
 ---
-title: Smart Contracts Overview
-description: Technical overview of the BitBlocks Finance smart contract system.
+title: Protocol contracts
+description: Scope and trust boundaries of the contracts used by BitBlocks Finance.
 ---
 
-import { Cards } from 'nextra/components'
+import { Callout } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 
-# Smart Contracts
+<PageIntro
+  eyebrow="Protocol reference · Overview"
+  title="Know which code receives the call."
+  description="BitBlocks Finance combines native protocol contracts with external liquidity integrations. This reference keeps those trust boundaries explicit."
+>
+  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Solidity 0.5–0.6</Pill><Pill tone="amber">No proxy in mirrored core source</Pill></div>
+</PageIntro>
 
-BitBlocks Finance is built on a set of audited, open smart contracts deployed on **Binance Smart Chain (BSC)**. The protocol uses a modified Uniswap V2 AMM paired with a MasterChef staking contract.
+## BitBlocks protocol contracts
 
-## Contract System
+<InfoGrid>
+  <InfoCard icon="route" title="Router"><p>The user-facing V2 entry point for swaps, adding liquidity, removing liquidity, and native BNB wrapping paths.</p></InfoCard>
+  <InfoCard icon="layers" title="Factory and pairs"><p>The factory creates deterministic pair contracts. Each pair holds two reserves, mints LP tokens, and enforces the 0.25% fee-adjusted invariant.</p></InfoCard>
+  <InfoCard icon="coins" title="MasterChef"><p>A single farm manager with multiple pool IDs, BBKFI minting, pool weights, deposit fees, reward debt and emergency withdrawal.</p></InfoCard>
+  <InfoCard icon="spark" title="SmartChef"><p>Independent single-pool staking contracts with pre-funded rewards, per-block rate, fixed start/end blocks and optional wallet limits.</p></InfoCard>
+</InfoGrid>
 
-| Contract | Purpose |
-|----------|---------|
-| **BBK Router** | Executes swaps and liquidity operations |
-| **BBK Factory** | Creates and tracks all liquidity pool pairs |
-| **MasterChef** | Manages staking pools and reward distribution |
-| **LP Tokens** | ERC-20 tokens representing liquidity pool shares |
+## External integrations
 
-## Security
+The quote engine also knows PancakeSwap V2, PancakeSwap V3, and optional 1inch endpoints. These are **not BitBlocks-owned protocol contracts**. A winning external route can change the approval spender and execution target.
 
-- All contracts are deployed with verified source code on BscScan
-- Non-upgradeable core contracts: ownership is renounced or held by a multisig
-- The protocol does not take custody of user funds at any point
+| Integration | Used for | Enabled by |
+|---|---|---|
+| PancakeSwap V2 Router | V2 quote and execution | Included in router registry |
+| PancakeSwap Quoter V2 | V3 fee-tier quotes | Included in V3 quote path |
+| PancakeSwap Smart Router | V3 execution | Included in V3 quote path |
+| 1inch Classic Swap v6 | Aggregated quotes and transaction data | Environment provider flag + server API key |
 
-## Resources
+<Callout type="warning">
+  The mirrored source demonstrates implementation behavior; it is not an audit report. This documentation intentionally makes no “audited” claim without a named report, scope, date, and artifact.
+</Callout>
 
-<Cards>
-  <Cards.Card title="Contract Addresses" href="/contracts/addresses" arrow />
-  <Cards.Card title="Architecture" href="/contracts/architecture" arrow />
-</Cards>
+## Where to continue
+
+- [Contract addresses](/contracts/addresses) — canonical values used by the current frontend configuration.
+- [Architecture](/contracts/architecture) — call flows, formulas, permissions, and failure boundaries.
+- [Frontend reference](/contracts/frontend-reference) — route providers, defaults, token registry, and deep links.

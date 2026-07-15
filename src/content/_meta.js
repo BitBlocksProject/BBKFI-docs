@@ -1,9 +1,11 @@
-export default {
+const meta = {
   index: {
-    title: 'Home',
+    title: 'Documentation',
     display: 'hidden',
   },
-  introduction: 'Introduction',
-  guides: 'Guides',
-  contracts: 'Smart Contracts',
+  introduction: 'Learn',
+  guides: 'Use the app',
+  contracts: 'Protocol reference',
 }
+
+export default meta

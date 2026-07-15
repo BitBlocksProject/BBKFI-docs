@@ -1,0 +1,38 @@
+---
+title: Governance status
+description: Current status of governance in BitBlocks Finance and the voting primitives in BBKFI.
+---
+
+import { Callout } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
+
+<PageIntro
+  eyebrow="Use the app · Governance"
+  title="Voting primitives exist. The main workflow is still coming."
+  description="BBKFI records delegated voting power and historical checkpoints, but the current BitBlocks Finance Governance page does not yet submit proposals or votes."
+>
+  <div style={{marginTop: '1rem'}}><Pill tone="amber">Coming soon in the app</Pill><Pill tone="violet">Delegation enabled</Pill></div>
+</PageIntro>
+
+## Current status
+
+The main application shows an informational Governance screen with a **Coming soon** state. It describes a roadmap for proposals and community participation and links to the separate BitBlocks voting site.
+
+<Callout type="warning">
+  Do not interpret a planned workflow as a live control plane. The Finance app does not currently expose buttons to create, queue, execute, or vote on on-chain proposals.
+</Callout>
+
+## What BBKFI supports today
+
+<InfoGrid>
+  <InfoCard icon="wallet" title="Delegate votes"><p>A holder can call `delegate` to assign voting power to an address. Delegation does not transfer the underlying BBKFI.</p></InfoCard>
+  <InfoCard icon="code" title="Delegate by signature"><p>`delegateBySig` supports typed-data authorization with nonce and expiry validation.</p></InfoCard>
+  <InfoCard icon="layers" title="Current votes"><p>`getCurrentVotes` reads the latest checkpoint for an account.</p></InfoCard>
+  <InfoCard icon="book" title="Prior votes"><p>`getPriorVotes` performs a checkpoint lookup for a finalized block, which is the primitive commonly used for snapshot-based governance.</p></InfoCard>
+</InfoGrid>
+
+## Related voting site
+
+The ecosystem exposes [vote.bitblockscrypto.com](https://vote.bitblockscrypto.com/) as a separate product. Verify its domain, connected network, contracts, and wallet prompt independently from the Finance app.
+
+This page will need an update when the main interface ships proposal and voting transactions. Until then, the code-backed statement is simple: **the token has voting primitives; the Finance governance workflow is not live.**
