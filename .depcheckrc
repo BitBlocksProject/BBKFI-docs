@@ -1,0 +1,17 @@
+{
+  "ignores": [
+    "@types/node",
+    "@types/react",
+    "@types/react-dom",
+    "depcheck",
+    "eslint",
+    "eslint-config-next",
+    "knip",
+    "next",
+    "tsx",
+    "typescript"
+  ],
+  "ignoreMatches": [
+    "@types/*"
+  ]
+}

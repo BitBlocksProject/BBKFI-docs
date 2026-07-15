@@ -12,9 +12,3 @@ export const SOCIAL = {
 }
 
 export const APP_URL = 'https://bitblocks.finance'
-export const NETWORK = {
-  name: 'BNB Smart Chain',
-  shortName: 'BSC',
-  chainId: 56,
-  explorer: 'https://bscscan.com',
-}
