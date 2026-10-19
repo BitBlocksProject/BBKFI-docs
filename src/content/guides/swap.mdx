@@ -1,31 +1,41 @@
 ---
 title: Swap tokens
-description: Quote, review, approve, and execute a routed token swap in BitBlocks Finance.
+description: Quote, review, approve, and execute a routed token swap across BitBlocks V2, BitBlocks V3, PancakeSwap and 1inch.
 ---
 
 import { Callout, Steps } from 'nextra/components'
-import { InfoCard, InfoGrid, PageIntro, Pill, RouteDiagram } from '@/components/docs-ui'
+import { PageIntro, Pill, RouteDiagram } from '@/components/docs-ui'
 
 <PageIntro
   eyebrow="Use the app · Swap"
   title="Compare the route before you trade."
-  description="The swap screen probes several liquidity sources, ranks successful quotes by output, and lets you inspect alternatives before your wallet signs."
+  description="The swap screen quotes BitBlocks and third-party liquidity in parallel, ranks successful quotes by what you actually receive, and lets you inspect alternatives before your wallet signs."
 >
-  <div style={{marginTop: '1rem'}}><Pill>Exact input</Pill><Pill tone="slate">5 minute deadline</Pill><Pill tone="amber">Price-impact guard</Pill></div>
+  <div style={{marginTop: '1rem'}}><Pill>Exact input</Pill><Pill tone="slate">5 minute default deadline</Pill><Pill tone="violet">BitBlocks routes fee-free</Pill><Pill tone="amber">Price-impact guard</Pill></div>
 </PageIntro>
 
 ## Quote providers
 
 <RouteDiagram />
 
-| Provider | Quote path | Execution target | Fee represented by the app |
-|---|---|---|---|
-| **BitBlocks** | V2 direct and multi-hop paths | BitBlocks Router | 0.25% LP fee per hop |
-| **PancakeSwap** | V2 direct and multi-hop paths | PancakeSwap V2 Router | 0.25% LP fee per hop |
-| **PancakeSwap V3** | Common V3 fee tiers | PancakeSwap Smart Router | Winning pool's fee tier |
-| **1inch** | Aggregated BSC route, when enabled | Live 1inch spender/router | 0.15% configured partner fee |
+| Provider | Quote path | Execution target | Pool fee | Platform fee |
+|---|---|---|---|---|
+| **BitBlocks** (V2) | Direct and multi-hop V2 paths | BitBlocks Router | 0.25% per hop | None |
+| **BitBlocks V3** | Direct or one intermediate (WBNB, USDT, BBKFI, WBBK) across all four fee tiers | BitBlocks V3 SwapRouter | Tier of each pool | None |
+| **BitBlocks mixed** | Two hops on different BitBlocks AMMs: V2 then V3, or V3 then V2 | BitBlocks Smart Router | 0.25% on the V2 hop + V3 tier | None |
+| **PancakeSwap** (V2) | Direct and multi-hop V2 paths | PancakeSwap Smart Router | 0.25% per hop | 0.15% |
+| **PancakeSwap V3** | Single hop across 0.01%, 0.05%, 0.25% and 1% tiers | PancakeSwap Smart Router | Winning pool's tier | 0.15% |
+| **1inch** | Aggregated BSC route, when enabled | Live 1inch spender/router | Inside the aggregate route | 0.15% partner fee |
 
-The route engine uses WBNB, BUSD, USDT, ETH, BBKFI, WBBK V2, and legacy WBBK V1 as possible base assets for multi-hop discovery. A provider that errors or has no liquidity is excluded from the result.
+The V2 route engine uses WBNB, BUSD, USDT, ETH, BBKFI, WBBK V2, and legacy WBBK V1 as possible base assets for multi-hop discovery. A provider that errors or has no liquidity is excluded from the result.
+
+### How the winner is chosen
+
+Every quote's output is already **net of the platform fee**. When BNB or WBNB is on one side of the trade, the app also subtracts an estimate of the network cost, converted into the output token. The route with the highest resulting amount wins. There is no extra tie-break: because third-party quotes carry the 0.15% fee, a BitBlocks route wins whenever it delivers at least as much.
+
+<Callout type="info">
+  The platform fee applies only to PancakeSwap and 1inch routes. For PancakeSwap routes it is taken on-chain by the Smart Router in the same transaction (`sweepTokenWithFee` or `unwrapWETH9WithFee`); for 1inch it is passed as the partner fee. Trade details show **Platform fee: Free** on BitBlocks routes.
+</Callout>
 
 ## Make a swap
 
@@ -33,19 +43,19 @@ The route engine uses WBNB, BUSD, USDT, ETH, BBKFI, WBBK V2, and legacy WBBK V1 
 
 ### Select the input and output tokens
 
-Choose from the curated list, search the merged BSC token list, or paste a valid token address. Confirm the symbol and contract address for custom tokens.
+Choose from the curated list, search the merged BSC token list, or paste a valid token address. Tokens you hold are listed first, sorted by USD value. Confirm the symbol and contract address for custom tokens.
 
 ### Enter the amount to sell
 
-The app quotes an **exact input** amount. Selecting **Max** for native BNB reserves a buffer for gas instead of using the entire balance.
+The app quotes an **exact input** amount. Selecting **Max** for native BNB keeps 0.002 BNB in the wallet for gas instead of using the entire balance.
 
 ### Review the winning route
 
-Open trade details to compare output, minimum received, network cost, route hops, LP fee, and price impact. Alternative successful routes remain selectable.
+Open trade details to compare price impact, minimum received, slippage, route hops, protocol, platform fee, pool fees or V3 fee tiers, estimated network cost, and router. Alternative successful routes remain selectable, labeled with their difference versus the best route.
 
-### Set slippage if needed
+### Set slippage and deadline if needed
 
-The default is **0.3%**. Presets are 0.3%, 0.5%, and 1%. Custom slippage is capped at 50%, with warnings for high values.
+The default slippage is **0.3%**. Presets are 0.3%, 0.5%, and 1%. Custom slippage is capped at 50%, with warnings for high values. The transaction deadline defaults to **5 minutes** and accepts 1 to 120 minutes.
 
 ### Authorize the input token
 
@@ -57,9 +67,21 @@ Review the final modal, select **Swap**, and inspect the wallet prompt. The app 
 
 </Steps>
 
+## Approval spender by route
+
+| Selected route | Contract you approve |
+|---|---|
+| BitBlocks (V2) | BitBlocks Router |
+| BitBlocks V3 | BitBlocks V3 SwapRouter |
+| BitBlocks mixed | BitBlocks Smart Router |
+| PancakeSwap V2 or V3 | PancakeSwap Smart Router |
+| 1inch | Spender returned by the 1inch API |
+
+Addresses are listed in [Contract addresses](/contracts/addresses).
+
 ## Price-impact policy
 
-For V2 and V3 quotes, the app compares the quoted output with a fee-adjusted mid-price:
+For V2, V3 and mixed quotes, the app compares the quoted output with a fee-adjusted mid-price derived from V2 reserves and V3 pool prices:
 
 | Pure curve impact | Interface classification |
 |---|---|
@@ -68,15 +90,15 @@ For V2 and V3 quotes, the app compares the quoted output with a fee-adjusted mid
 | 5% to below 15% | High |
 | 15% or more | Blocked |
 
-If a V2/V3 mid-price cannot be calculated, the app marks price impact unavailable instead of inventing a value. 1inch is treated as an opaque aggregate route, so local price impact is shown as unknown.
+If a mid-price cannot be calculated, the app marks price impact unavailable and fails closed instead of inventing a value. 1inch is treated as an opaque aggregate route, so local price impact is shown as unknown.
 
 <Callout type="warning">
-  Slippage tolerance is not a target price. It is the maximum deterioration accepted between quote and execution. A very high value exposes the trade to worse execution and front-running.
+  BitBlocks V3 pools can be shallow. A small trade can already move a concentrated-liquidity pool when little liquidity is active near the current price. Read the price impact, not just the route name. Slippage tolerance is not a target price: it is the maximum deterioration accepted between quote and execution, and a very high value exposes the trade to worse execution and front-running.
 </Callout>
 
 ## BNB and WBNB
 
-BNB ↔ WBNB is detected as a direct wrap or unwrap, not an AMM trade. Output is one-to-one before gas, price impact is zero, and no router quote is required.
+BNB ↔ WBNB is detected as a direct wrap or unwrap, not an AMM trade. Output is one-to-one before gas, price impact is zero, and no router quote is required. Other native BNB swaps are wrapped and unwrapped by the selected router inside the same transaction.
 
 ## Shareable links
 

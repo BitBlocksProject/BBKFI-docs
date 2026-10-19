@@ -1,6 +1,6 @@
 ---
 title: Stake and earn
-description: Understand MasterChef farms and SmartChef reward pools before staking.
+description: Understand MasterChef farms and SmartChef reward pools before staking, and where V2 LP and V3 positions fit.
 ---
 
 import { Callout, Steps, Tabs } from 'nextra/components'
@@ -13,6 +13,14 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 >
   <div style={{marginTop: '1rem'}}><Pill>MasterChef</Pill><Pill tone="violet">SmartChef</Pill><Pill tone="amber">Variable APR</Pill></div>
 </PageIntro>
+
+## Where staking lives now
+
+The Earn page is labeled **Earn (old)** in the sidebar and is linked from the site footer. It still lists every MasterChef farm and SmartChef pool and remains the place for single-token staking. For V2 LP, **My positions** in Liquidity can stake, unstake, and harvest MasterChef farms in place; see [Manage liquidity](/guides/liquidity#stake-or-remove-v2-liquidity).
+
+<Callout type="info">
+  **BitBlocks V3 positions are not farmable in the app yet.** They earn trading fees only. MasterChef BBKFI rewards currently apply to staked V2 LP and single-token pools.
+</Callout>
 
 ## Compare pool systems
 
@@ -29,7 +37,7 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 
 <Steps>
 
-### Open Earn and choose a status
+### Open Earn (old) and choose a status
 
 The screen groups available pools and derives active, upcoming, or ended state from current block data. Review token pair, pool type, reward asset, TVL, APR and timing.
 
@@ -39,7 +47,7 @@ Select a pool to inspect wallet balance, amount already staked, pending rewards,
 
 ### Choose Stake
 
-Enter an amount or select **Max**. For MasterChef pools with a deposit fee, the next-day estimate uses the net deposited amount.
+Enter an amount or select **Max**. For MasterChef pools with a deposit fee, the next-day estimate uses the net deposited amount. Ended pools no longer accept new stakes, and SmartChef pools enforce their per-user cap before a transaction is sent.
 
 ### Approve and deposit
 
@@ -67,7 +75,9 @@ Pending rewards accrue according to the contract's accumulator and are refreshed
 
 ## What APR means here
 
-APR is computed from current reward rate, reward price, deposited value, pool weight and an assumed BSC block cadence. It can change when any input changes. It is not stored as a fixed percentage in the staking contract.
+APR is computed from current reward rate, reward price, deposited value, pool weight and an assumed BSC block time of 0.45 seconds (about 192,000 blocks per day). It can change when any input changes. It is not stored as a fixed percentage in the staking contract.
+
+In Liquidity, a V2 pool's APR adds this farm APR to the pair's fee APR, and the farm part only applies to the staked share of your LP.
 
 <InfoGrid>
   <InfoCard icon="coins" title="Check the reward asset"><p>A high token count is not the same as high value. Confirm the reward contract, price liquidity, and whether it can be sold.</p></InfoCard>

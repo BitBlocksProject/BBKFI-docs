@@ -33,7 +33,7 @@ export function HomeHero() {
       <div className="docs-hero-content">
         <Eyebrow>Protocol documentation · BNB Chain</Eyebrow>
         <h1>DeFi you can<br /><span>understand.</span></h1>
-        <p>Learn how BitBlocks Finance routes trades, creates liquidity positions, and distributes on-chain rewards—before you sign.</p>
+        <p>Learn how BitBlocks Finance routes trades, opens V2 and concentrated-liquidity V3 positions, and distributes on-chain rewards—before you sign.</p>
         <div className="docs-hero-actions">
           <Link href="/guides" className="docs-button docs-button-primary">Start here <Icon name="arrow" /></Link>
           <a href="https://bitblocks.finance" target="_blank" rel="noreferrer" className="docs-button docs-button-secondary">Open the app <Icon name="arrow" /></a>
@@ -81,8 +81,8 @@ export function StatsStrip() {
   return <div className="docs-stats-strip">
     <div><strong>56</strong><span>Chain ID</span></div>
     <div><strong>0.3%</strong><span>Default slippage</span></div>
-    <div><strong>0.25%</strong><span>BitBlocks V2 fee / hop</span></div>
-    <div><strong>3+</strong><span>Routing sources</span></div>
+    <div><strong>4</strong><span>BitBlocks V3 fee tiers</span></div>
+    <div><strong>0%</strong><span>Platform fee on BitBlocks routes</span></div>
   </div>
 }
 
@@ -115,7 +115,7 @@ export function RouteDiagram() {
     <span className="docs-diagram-arrow">→</span>
     <div className="docs-diagram-stack"><div><Icon name="route" /><span>Quote engine</span></div><small>compares output</small></div>
     <span className="docs-diagram-arrow">→</span>
-    <div className="docs-diagram-routes"><span>BitBlocks V2</span><span>Pancake V2/V3</span><span>1inch*</span></div>
+    <div className="docs-diagram-routes"><span>BitBlocks V2/V3</span><span>Pancake V2/V3</span><span>1inch*</span></div>
     <span className="docs-diagram-arrow">→</span>
     <div className="docs-diagram-node"><Icon name="check" /><span>Wallet signature</span></div>
   </div>

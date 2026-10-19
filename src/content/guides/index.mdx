@@ -45,7 +45,7 @@ Check the shortened address in the app against the account shown by your wallet.
 
 ### Choose an action
 
-Use the sidebar on desktop or bottom navigation on mobile to open **Swap**, **Liquidity**, **Earn**, **Tokens**, or **Dashboard**.
+On desktop, the sidebar opens **Swap**, **Liquidity** (with **My positions** and **Create position**), **Earn (old)**, the external **WBBK Bridge**, and **Info → Tokens**. On mobile, the bottom navigation opens **Swap**, **Liquidity**, **Positions**, **Create**, and **Tokens**. Earn, Dashboard, Governance and Updates are also linked from the site footer.
 
 </Steps>
 
@@ -58,13 +58,14 @@ Use the sidebar on desktop or bottom navigation on mobile to open **Swap**, **Li
 For an ERC-20 token, the first interaction with a contract often requires:
 
 1. **Approval or permit** — authorizes a specific spender to use the token.
-2. **Protocol action** — performs the swap, supplies liquidity, or deposits into a pool.
+2. **Protocol action** — performs the swap, supplies liquidity, mints a V3 position, or deposits into a pool.
 
-Native BNB does not need ERC-20 approval. Some tokens support EIP-2612 permit signatures. In the current **swap** implementation, the app signs typed data and then submits `permit` to the token on-chain before swapping, so this path still uses gas. LP removal can instead pass its permit signature into the router's removal transaction.
+Native BNB does not need ERC-20 approval. Some tokens support EIP-2612 permit signatures. In the current **swap** implementation, the app signs typed data and then submits `permit` to the token on-chain before swapping, so this path still uses gas. V2 LP removal can instead pass its permit signature into the router's removal transaction. V3 positions are NFTs owned by your wallet, so managing an existing position needs no extra approval.
 
 ## Continue
 
 - [Swap tokens](/guides/swap)
 - [Manage liquidity](/guides/liquidity)
+- [Concentrated liquidity (V3)](/guides/concentrated-liquidity)
 - [Stake and earn](/guides/earn)
 - [Review the safety checklist](/guides/safety)

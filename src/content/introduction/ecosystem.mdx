@@ -9,29 +9,31 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 <PageIntro
   eyebrow="Learn · Ecosystem"
   title="A small protocol surface with several ways in."
-  description="The dashboard, swap, liquidity, and earn pages share one wallet and one BNB Smart Chain connection, but each action settles through a different contract path."
+  description="Swap, liquidity, earn, and token pages share one wallet and one BNB Smart Chain connection, but each action settles through a different contract path."
 >
-  <div style={{marginTop: '1rem'}}><Pill>Non-custodial</Pill><Pill tone="violet">Composable LP tokens</Pill><Pill tone="slate">BEP-20 compatible</Pill></div>
+  <div style={{marginTop: '1rem'}}><Pill>Non-custodial</Pill><Pill tone="violet">LP tokens + V3 NFTs</Pill><Pill tone="slate">BEP-20 compatible</Pill></div>
 </PageIntro>
 
 ## Product map
 
 | Surface | What it reads | What it can write |
 |---|---|---|
-| **Dashboard** | Protocol metrics, token prices, wallet balances | Nothing by default |
-| **Swap** | Quotes, balances, allowances, pool reserves | Approval, permit, wrap/unwrap, or swap |
-| **Liquidity** | Pair address, reserves, wallet LP positions | Approval, add liquidity, remove liquidity |
+| **Swap** | Quotes, balances, allowances, pool reserves and prices | Approval, permit, wrap/unwrap, or swap |
+| **Liquidity · Pools** | Indexed V2 and V3 pools: TVL, volume, fees, APR, charts | Opens the add flow or a pool page |
+| **Liquidity · My positions** | Wallet V2 LP, V3 NFT positions, farm stakes, pending rewards | Add, remove, collect V3 fees, stake/unstake V2 LP, harvest |
+| **Liquidity · Create position** | Pool state, ticks, liquidity distribution, balances | Approval, create/initialize a V3 pool, mint a V3 position, or add V2 liquidity |
 | **Earn** | MasterChef and SmartChef pool state | Approval, deposit, withdraw, harvest |
-| **Tokens** | Curated identity plus market endpoints | Opens prefilled swap or liquidity flows |
+| **Tokens** | Prices, volume and liquidity from BitBlocks pools | Opens prefilled swap or liquidity flows |
+| **Dashboard** | Protocol metrics, token prices, wallet balances | Nothing by default |
 | **Governance** | Informational roadmap | No live proposal action in the main app |
 
 ## Protocol layers
 
 <InfoGrid>
   <InfoCard icon="wallet" title="Interface layer"><p>Next.js, wagmi, viem and RainbowKit connect the browser to BNB Smart Chain. A fallback list of BSC RPC endpoints is configured for reads and transaction tracking.</p></InfoCard>
-  <InfoCard icon="route" title="Routing layer"><p>The quote engine probes candidate paths through base assets such as WBNB, BUSD, USDT, ETH, BBKFI and WBBK, then compares eligible providers.</p></InfoCard>
-  <InfoCard icon="layers" title="AMM layer"><p>The BitBlocks Router calls the BitBlocks Factory and V2 pair contracts. Pairs hold reserves, apply the constant-product invariant, and mint LP tokens.</p></InfoCard>
-  <InfoCard icon="coins" title="Reward layer"><p>One MasterChef manages many BBKFI pools. Separate SmartChef contracts each manage one pre-funded reward schedule over a defined block range.</p></InfoCard>
+  <InfoCard icon="route" title="Routing layer"><p>The quote engine probes direct and multi-hop paths through base assets such as WBNB, BUSD, USDT, ETH, BBKFI and WBBK on every venue, then ranks the results by output net of estimated gas.</p></InfoCard>
+  <InfoCard icon="layers" title="AMM layer"><p>BitBlocks V2 is a constant-product AMM with fungible LP tokens. BitBlocks V3 is a concentrated-liquidity AMM, forked from PancakeSwap V3, where each position is an NFT with its own price range.</p></InfoCard>
+  <InfoCard icon="coins" title="Reward layer"><p>One MasterChef manages many BBKFI pools and is the only BBKFI minter. Separate SmartChef contracts each manage one pre-funded reward schedule over a defined block range.</p></InfoCard>
 </InfoGrid>
 
 ## Related BitBlocks products
@@ -39,7 +41,7 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 The Finance app is one product in the broader BitBlocks ecosystem:
 
 - [BitBlocks ecosystem](https://bitblockscrypto.com) — the network and project landing site.
-- [WBBK bridge](https://bridge.bitblockscrypto.com/) — conversion between BBK and its BNB Chain representation.
+- [WBBK bridge](https://bridge.bitblockscrypto.com/) — conversion between BBK and its BNB Chain representation, linked from the app sidebar.
 - [BitBlocks explorer](https://explorer.bitblockscrypto.com/) — explorer for the BitBlocks chain.
 - [Voting site](https://vote.bitblockscrypto.com/) — a separate ecosystem voting experience.
 
@@ -50,7 +52,8 @@ The Finance app is one product in the broader BitBlocks ecosystem:
 ## Design boundaries
 
 - The Finance app is configured for **BNB Smart Chain only**.
-- Native BNB is represented as WBNB inside AMM paths; direct BNB ↔ WBNB actions use wrap/unwrap logic.
+- Native BNB is represented as WBNB inside AMM paths and pools; direct BNB ↔ WBNB actions use wrap/unwrap logic.
 - WBBK V2 is the curated active WBBK asset. WBBK V1 remains searchable but is labeled **deprecated** in the interface configuration.
+- BitBlocks V3 fee tiers are **0.01%, 0.05%, 0.3% and 1%**. There is no 0.25% tier, unlike PancakeSwap V3.
 - 1inch is optional and only participates when its provider flag and server credential are configured.
-- Protocol routes and external routes have different spender addresses. The app derives the approval target from the selected quote.
+- Every route has its own approval spender. The app derives the approval target from the selected quote.

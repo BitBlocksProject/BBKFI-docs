@@ -1,6 +1,6 @@
 ---
 title: Frontend reference
-description: Current routing defaults, token registry, safety thresholds, and URL parameters in the BitBlocks Finance interface.
+description: Current routing defaults, V3 settings, token registry, safety thresholds, and URL parameters in the BitBlocks Finance interface.
 ---
 
 import { Callout } from 'nextra/components'
@@ -9,7 +9,7 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 <PageIntro
   eyebrow="Protocol reference · Interface"
   title="The configuration between intent and calldata."
-  description="This page documents the current frontend constants that materially influence routes, quote validation, approvals, and user-visible behavior."
+  description="This page documents the current frontend constants that materially influence routes, quote validation, approvals, liquidity positions, and user-visible behavior."
 >
   <div style={{marginTop: '1rem'}}><Pill>Next.js</Pill><Pill tone="slate">wagmi + viem</Pill><Pill tone="violet">RainbowKit</Pill></div>
 </PageIntro>
@@ -24,6 +24,7 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 | Wallet UI | RainbowKit |
 | Client stack | wagmi + viem |
 | RPC strategy | Optional primary RPC plus ordered public fallback list |
+| Assumed block time | 0.45 seconds (reward and APR estimates) |
 
 ## Swap defaults
 
@@ -33,16 +34,18 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 | Default slippage | `30 bps` / 0.3% |
 | Presets | 0.3%, 0.5%, 1% |
 | Maximum slippage | 50% |
-| Default deadline | 300 seconds |
+| Default deadline | 5 minutes (adjustable from 1 to 120) |
+| Native BNB Max reserve | 0.002 BNB kept for gas |
 | Medium price impact | 3% |
 | High price impact | 5% |
 | Blocked price impact | 15% |
 | V2 LP fee assumption | 25 bps per hop |
-| 1inch partner fee | 15 bps / 0.15% |
+| Platform fee | 15 bps / 0.15% on PancakeSwap and 1inch routes only |
+| Quote refresh | Debounced 300 ms; refreshed every 10 seconds |
 
 ## Curated swap assets
 
-The initial list includes BNB, BBKFI, WBBK V2, BUSD, USDT, ETH, WBNB, and deprecated WBBK V1. BFIRE is included as an extra searchable project asset. The modal then merges the Trust Wallet BSC token list and can resolve custom contract metadata.
+The initial list includes BNB, BBKFI, WBBK V2, BUSD, USDT, ETH, WBNB, and deprecated WBBK V1. BFIRE is included as an extra searchable project asset. The modal then merges the Trust Wallet BSC token list, puts tokens the wallet holds first, and can resolve custom contract metadata.
 
 <Callout type="warning">
   Inclusion in a token list is metadata, not due diligence. Always verify token contracts and liquidity.
@@ -50,14 +53,35 @@ The initial list includes BNB, BBKFI, WBBK V2, BUSD, USDT, ETH, WBNB, and deprec
 
 ## Route selection
 
+| Venue | Paths quoted | Routing bases |
+|---|---|---|
+| BitBlocks V2 | Direct and multi-hop | WBNB, BUSD, USDT, ETH, BBKFI, WBBK V2, WBBK V1 |
+| PancakeSwap V2 | Direct and multi-hop | Same as BitBlocks V2 |
+| BitBlocks V3 | Direct or one intermediate, all four tiers | WBNB, USDT, BBKFI, WBBK V2 |
+| BitBlocks mixed | Two hops, one V2 and one V3 | WBNB, USDT, BBKFI, WBBK V2 |
+| PancakeSwap V3 | Single hop, tiers 0.01%, 0.05%, 0.25%, 1% | None |
+| 1inch | Aggregated, when enabled | Provider-defined |
+
 <InfoGrid>
-  <InfoCard icon="route" title="V2 candidates"><p>Direct paths and routes through configured base assets are quoted on BitBlocks and PancakeSwap routers in parallel.</p></InfoCard>
-  <InfoCard icon="layers" title="V3 candidates"><p>Common PancakeSwap V3 fee tiers are probed, with spot information used to estimate price impact.</p></InfoCard>
+  <InfoCard icon="route" title="Net of fees"><p>Third-party quotes have the 0.15% platform fee deducted before comparison, so minimum received and route ranking are both net amounts.</p></InfoCard>
+  <InfoCard icon="coins" title="Net of gas"><p>When BNB or WBNB is on one side, estimated network cost is converted to the output token and subtracted before ranking.</p></InfoCard>
   <InfoCard icon="spark" title="1inch candidate"><p>The optional provider is included only when its public feature flag is true; server routes still require an API key.</p></InfoCard>
-  <InfoCard icon="check" title="Winner"><p>Successful quotes are sorted by raw output. The selected route supplies the execution and allowance-spender address.</p></InfoCard>
+  <InfoCard icon="check" title="Winner"><p>The highest net output wins, with no tie-break favoring any venue. The selected route supplies the execution and allowance-spender address.</p></InfoCard>
 </InfoGrid>
 
-## URL parameters
+## Liquidity defaults
+
+| Setting | Value |
+|---|---|
+| Default version for new positions | V3 (`?version=v2` selects V2) |
+| Default V3 fee tier | 0.3% |
+| V3 fee tiers | 0.01%, 0.05%, 0.3%, 1% |
+| Range presets | Full range plus three ± presets per tier (see [V3 guide](/guides/concentrated-liquidity#fee-tiers)) |
+| Liquidity slippage and deadline | Same defaults as swap: 0.3%, 5 minutes |
+| Small-pool threshold in Pools | Pools under US$ 10 TVL hidden by default |
+| Pool data source | BitBlocks Finance info backend, about 5-minute snapshots |
+
+## URL parameters and routes
 
 The swap screen accepts:
 
@@ -67,14 +91,27 @@ The swap screen accepts:
 | `tokenIn=0x…` | Prefill the input asset |
 | `amountIn=1.25` | Prefill a decimal exact-input amount |
 
-Liquidity routes also support pair-prefilled add URLs and address-based removal URLs generated by the interface.
+Liquidity pages use these paths:
+
+| Path | Purpose |
+|---|---|
+| `/liquidity` | Pools tab (default) |
+| `/liquidity?tab=positions` | My positions |
+| `/liquidity/add/0xTokenA/0xTokenB` | Prefilled V3 add flow |
+| `/liquidity/add/0xTokenA/0xTokenB/3000` | Prefilled V3 add flow with a fee tier |
+| `/liquidity/add/0xTokenA/0xTokenB?version=v2` | Prefilled V2 add flow |
+| `/liquidity/pool/0xPool` | Pool page for a V2 pair or V3 pool |
+| `/liquidity/v3/123` | V3 position page by NFT token ID |
+| `/liquidity/remove/0xTokenA/0xTokenB` | V2 removal flow |
 
 ## Approval paths
 
 - Swap detects EIP-2612 support, signs typed data, then submits `permit` to the token on-chain with maximum allowance and a one-hour deadline.
-- Standard swap approval targets the selected router or 1inch spender.
-- Adding liquidity approves the BitBlocks liquidity router for both ERC-20 sides.
-- Removing liquidity can sign a V2 LP permit; the router call must reuse the permit deadline.
+- Standard swap approval targets the selected route's router: BitBlocks Router, V3 SwapRouter, BitBlocks Smart Router, PancakeSwap Smart Router, or the 1inch spender.
+- Adding V2 liquidity approves the BitBlocks Router for both ERC-20 sides.
+- Creating or increasing a V3 position approves the NonfungiblePositionManager, with maximum allowance and exact-amount fallback.
+- Removing V3 liquidity and collecting fees need no token approval; the wallet must own the position NFT.
+- Removing V2 liquidity can sign a V2 LP permit; the router call must reuse the permit deadline.
 - MasterChef approval targets the MasterChef contract.
 - SmartChef approval targets that individual pool address.
 

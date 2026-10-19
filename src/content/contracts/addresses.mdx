@@ -1,6 +1,6 @@
 ---
 title: Contract addresses
-description: Protocol, token, and integration addresses configured by the current BitBlocks Finance frontend.
+description: BitBlocks V2, BitBlocks V3, staking, token, and integration addresses configured by the current BitBlocks Finance frontend.
 ---
 
 import { Callout } from 'nextra/components'
@@ -9,16 +9,42 @@ import { ContractCard, PageIntro, Pill } from '@/components/docs-ui'
 <PageIntro
   eyebrow="Protocol reference · Addresses"
   title="Verify the destination, not just the label."
-  description="The values below are taken from the current application configuration and mirrored verified source artifacts. Links open the address directly on BscScan."
+  description="The values below are taken from the current application configuration, the BitBlocks V3 deployment record, and mirrored verified source artifacts. Links open the address directly on BscScan."
 >
   <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Chain ID 56</Pill></div>
 </PageIntro>
 
-## Core BitBlocks protocol
+## BitBlocks V2
 
 <ContractCard name="BitBlocks Router" kind="V2 AMM router" address="0xdF81889adfB8CE92142f0089388Cc9E5edfee765" note="Swap, add liquidity, remove liquidity, and BNB/WBNB handling." />
 <ContractCard name="BitBlocks Factory" kind="V2 pair factory" address="0x65b3cc7a7cb167221266fc93884717de2dbd074e" note="Creates and indexes BitBlocks pair contracts." />
-<ContractCard name="MasterChef" kind="Multi-pool rewards" address="0xAF7769F4347cc88eD50191eaca7c3ab380097b06" note="Staking positions, pool weights, deposit fees, and BBKFI rewards." />
+
+The V2 pair init code hash is `0xb056681b9b055cda84fe24a9c9a234981f81ca911e843814a6fee1f606fe512f`.
+
+## BitBlocks V3
+
+<ContractCard name="BitBlocksV3Factory" kind="V3 pool registry" address="0xa83f730FD076574F9aD6B54af653aB9E4743D3aC" note="Fee tiers, pool lookup, and per-pool protocol fee. Owned by the timelock." />
+<ContractCard name="BitBlocksV3PoolDeployer" kind="V3 pool deployer" address="0xFcD52286CbbF5AA8BD9318caC76A35d5804f3c3F" note="Deploys pools with CREATE2; pool addresses derive from this contract." />
+<ContractCard name="NonfungiblePositionManager" kind="V3 positions (NFT)" address="0x018810f07310cB73CCb9908186444BDD97eCB581" note="Approval target when you create, increase, or manage a V3 position." />
+<ContractCard name="SwapRouter" kind="V3 swap router" address="0xDa62C075369279517C20aAeaaBF7339E35ee44c8" note="Executes BitBlocks V3 swap routes; approval target for those routes." />
+<ContractCard name="BitBlocks Smart Router" kind="Mixed V2 + V3 router" address="0xD2Bd91da9F8B5477B00c020EcD644c39ba35053b" note="Executes routes that combine BitBlocks V2 pairs and V3 pools. No owner." />
+<ContractCard name="QuoterV2" kind="V3 quotes (read)" address="0xDF975555b8F46B7E4ef0327e600edd5Da84e6049" />
+<ContractCard name="TickLens" kind="V3 tick data (read)" address="0x567279169F2C275Bc5ad4895deD57c36d09A2C29" />
+<ContractCard name="BitBlocksInterfaceMulticall" kind="Batched reads" address="0x33E5e4c461106C2D4eF890A083C3337831e06e6D" />
+<ContractCard name="NonfungibleTokenPositionDescriptor" kind="NFT metadata proxy" address="0xF0905EeF7f79208bb2158fd264b2d6178Ff3e62F" note="Upgradeable proxy for position NFT metadata, administered by the ProxyAdmin." />
+<ContractCard name="V3Migrator" kind="V2 → V3 migration" address="0xcee00287195C2A8fdca83DA1e567287763B42Ef9" note="Deployed with V3; not used by the current interface." />
+
+The V3 pool init code hash is `0x91ffe9eefadc27da6c35c29a5f99b303d88bdc637fec5f786cbc258811973dc8`, computed over the PoolDeployer rather than the factory.
+
+## BitBlocks V3 governance
+
+<ContractCard name="TimelockController" kind="Owner of the V3 factory and ProxyAdmin" address="0x8a2D24F82423471EacC2BBFc3452576a9D980E23" note="48-hour minimum delay. The Safe below is proposer and executor." />
+<ContractCard name="Safe multisig" kind="Timelock proposer and executor" address="0x527b3843a29B53533648987b45cdBfC0e4cf1631" />
+<ContractCard name="ProxyAdmin" kind="Admin of the NFT descriptor proxy" address="0xf8aa7BBD1796d0bD8b58Fa15f9469619f664abDf" note="Owned by the timelock." />
+
+## Rewards
+
+<ContractCard name="MasterChef" kind="Multi-pool rewards" address="0xAF7769F4347cc88eD50191eaca7c3ab380097b06" note="Staking positions, pool weights, deposit fees, and BBKFI rewards. Owner and only minter of BBKFI." />
 
 ## Project tokens
 
@@ -29,10 +55,12 @@ import { ContractCard, PageIntro, Pill } from '@/components/docs-ui'
 
 ## External swap infrastructure
 
-<ContractCard name="PancakeSwap V2 Router" kind="External integration" address="0x10ED43C718714eb63d5aA57B78B54704E256024E" />
-<ContractCard name="PancakeSwap Smart Router" kind="External integration" address="0x13f4EA83D0bd40E75C8222255bc855a974568Dd4" />
+<ContractCard name="PancakeSwap V2 Router" kind="External quote integration" address="0x10ED43C718714eb63d5aA57B78B54704E256024E" note="Quotes PancakeSwap V2 paths; execution goes through the Smart Router." />
+<ContractCard name="PancakeSwap Smart Router" kind="External integration" address="0x13f4EA83D0bd40E75C8222255bc855a974568Dd4" note="Executes PancakeSwap V2 and V3 routes and takes the 0.15% platform fee on-chain." />
 <ContractCard name="PancakeSwap Quoter V2" kind="External read integration" address="0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997" />
 <ContractCard name="1inch Aggregation Router V6" kind="External fallback spender" address="0x111111125421cA6dc452d289314280a0f8842A65" note="The app prefers the live spender returned by 1inch when that provider is enabled." />
+
+The platform fee on third-party routes is sent to `0x20C83729fc08Ff939230f6dd64661e401Ec6235a`, the same address configured as the BitBlocks V2 factory's `feeTo`.
 
 ## Common route assets
 
@@ -40,7 +68,7 @@ import { ContractCard, PageIntro, Pill } from '@/components/docs-ui'
 |---|---|---|
 | WBNB | `0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c` | Native BNB representation and routing base |
 | BUSD | `0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56` | Curated stablecoin and routing base |
-| USDT | `0x55d398326f99059fF775485246999027B3197955` | Curated stablecoin and routing base |
+| USDT | `0x55d398326f99059fF775485246999027B3197955` | Curated stablecoin, V2 and V3 routing base |
 | BTCB | `0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c` | Curated token page asset |
 | ETH | `0x2170Ed0880ac9A755fd29B2688956BD959F933F8` | Binance-Peg ETH and routing base |
 

@@ -25,7 +25,7 @@ import { ContractCard, InfoCard, InfoGrid, PageIntro, Pill } from '@/components/
 
 The verified BBKFI source is an ERC-20-compatible token with delegation checkpoints. Holders can delegate votes directly or by EIP-712 signature, and historical votes can be queried with `getPriorVotes`.
 
-Its `mint(address,uint256)` function is protected by `onlyOwner`. In the deployed system, the MasterChef is intended to own the token so reward minting follows pool accounting rather than an unrestricted public function.
+Its `mint(address,uint256)` function is protected by `onlyOwner`. On-chain, the token's owner is the MasterChef, so new BBKFI is only minted through MasterChef pool accounting rather than an unrestricted public function. The MasterChef source has no function that transfers BBKFI ownership onward.
 
 <InfoGrid>
   <InfoCard icon="coins" title="Pool-weighted rewards"><p>MasterChef calculates each pool's reward from elapsed blocks, `bbkfiPerBlock`, the pool's `allocPoint`, and `totalAllocPoint`.</p></InfoCard>
@@ -43,6 +43,8 @@ userPending = user.amount × pool.accBBKFIPerShare / 1e12 − user.rewardDebt
 
 That formula describes the code. It does **not** make a static APR promise. APR also depends on token prices, total stake, pool weight, deposit fee, block cadence and the moment the pool was last updated.
 
+A pool with zero stake mints nothing when it is updated, so allocation points held by an empty pool reduce the effective emission of the whole MasterChef. Read `bbkfiPerBlock`, `totalAllocPoint` and each pool's `allocPoint` and stake together before estimating daily issuance.
+
 ## SmartChef rewards
 
 SmartChef pools do not use the shared MasterChef emission. Each discovered SmartChef address has its own:
@@ -55,6 +57,13 @@ SmartChef pools do not use the shared MasterChef emission. Each discovered Smart
 
 The owner can stop rewards early, and a pool stops accruing after its end block. The Earn screen reads these fields before showing an active, upcoming, or ended state.
 
+## Liquidity provider fees
+
+Trading fees are not emissions. They come from swappers and accrue to liquidity providers inside the pools:
+
+- **BitBlocks V2:** a 0.25% fee per hop stays in the pair. Because the factory's `feeTo` is set, the protocol mints LP tokens worth 8/25 of fee growth, so liquidity providers keep about 0.17%.
+- **BitBlocks V3:** the fee tier of the pool (0.01%, 0.05%, 0.3% or 1%) is credited to in-range positions. A protocol share of 5% is set by default on new pools and can be changed per pool from 0% to 40% by the factory owner.
+
 <Callout type="warning">
-  Token supply, pool weights and reward schedules are live state. Use the Earn screen and BscScan for current values. This page intentionally documents mechanisms rather than freezing changeable numbers into prose.
+  Token supply, pool weights, reward schedules and protocol fee settings are live state. Use the app and BscScan for current values. This page intentionally documents mechanisms rather than freezing changeable numbers into prose.
 </Callout>

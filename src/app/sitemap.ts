@@ -9,6 +9,7 @@ const ROUTES = [
   'guides',
   'guides/swap',
   'guides/liquidity',
+  'guides/concentrated-liquidity',
   'guides/earn',
   'guides/governance',
   'guides/safety',

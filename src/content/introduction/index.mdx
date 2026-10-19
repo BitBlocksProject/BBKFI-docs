@@ -9,18 +9,18 @@ import { InfoCard, InfoGrid, PageIntro, Pill, RouteDiagram } from '@/components/
 <PageIntro
   eyebrow="Learn · Overview"
   title="One interface for the BitBlocks DeFi stack."
-  description="BitBlocks Finance is a self-custodial interface for routed token swaps, V2 liquidity, on-chain staking, token discovery, and protocol metrics on BNB Smart Chain."
+  description="BitBlocks Finance is a self-custodial interface for routed token swaps, V2 and concentrated-liquidity V3 pools, on-chain staking, token analytics, and protocol metrics on BNB Smart Chain."
 >
-  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Chain ID 56</Pill><Pill tone="amber">Gas paid in BNB</Pill></div>
+  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Chain ID 56</Pill><Pill tone="violet">BitBlocks V2 + V3</Pill><Pill tone="amber">Gas paid in BNB</Pill></div>
 </PageIntro>
 
 ## What is live in the app
 
 <InfoGrid>
-  <InfoCard icon="route" title="Swap"><p>Compares quotes from BitBlocks V2, PancakeSwap V2, PancakeSwap V3 and, when enabled, 1inch. The user can review route details before execution.</p></InfoCard>
-  <InfoCard icon="layers" title="Liquidity"><p>Creates or joins BitBlocks V2 pairs through the protocol router and factory. LP tokens represent the wallet's share of pool reserves.</p></InfoCard>
-  <InfoCard icon="coins" title="Earn"><p>Reads MasterChef farms and discovered SmartChef contracts, including pool state, deposit fees, reward windows, balances, and pending rewards.</p></InfoCard>
-  <InfoCard icon="book" title="Tokens & updates"><p>Provides a curated token directory, market context, protocol metrics, and product update pages inside the same dashboard shell.</p></InfoCard>
+  <InfoCard icon="route" title="Swap"><p>Compares quotes from BitBlocks V2, BitBlocks V3, mixed BitBlocks V2 + V3 routes, PancakeSwap V2, PancakeSwap V3 and, when enabled, 1inch. BitBlocks routes carry no platform fee; third-party routes carry 0.15%.</p></InfoCard>
+  <InfoCard icon="layers" title="Liquidity"><p>Lists BitBlocks V2 and V3 pools with TVL, volume and fee APR. New positions default to V3 concentrated liquidity, minted as an NFT; classic V2 pairs remain available and mint fungible LP tokens.</p></InfoCard>
+  <InfoCard icon="coins" title="Earn"><p>Reads MasterChef farms and discovered SmartChef contracts. V2 LP can also be staked and harvested directly from My positions. V3 positions earn trading fees only for now.</p></InfoCard>
+  <InfoCard icon="book" title="Tokens & updates"><p>Token analytics with price, volume and liquidity aggregated from BitBlocks pools, plus protocol metrics and product update pages inside the same dashboard shell.</p></InfoCard>
 </InfoGrid>
 
 <Callout type="warning" emoji="◌">
@@ -31,18 +31,19 @@ import { InfoCard, InfoGrid, PageIntro, Pill, RouteDiagram } from '@/components/
 
 <RouteDiagram />
 
-The app prepares transaction data, estimates output and presents the action. Your connected wallet remains the signer. An approval may be required before the router or staking contract can move an ERC-20 token.
+The app prepares transaction data, estimates output and presents the action. Your connected wallet remains the signer. An approval may be required before a router, the V3 position manager, or a staking contract can move an ERC-20 token.
 
 ## The operating model
 
-- **Self-custodial:** the frontend does not hold a wallet's assets. Tokens remain in the wallet unless the user supplies liquidity, deposits into a staking contract, or signs another on-chain action.
+- **Self-custodial:** the frontend does not hold a wallet's assets. Tokens remain in the wallet unless the user supplies liquidity, deposits into a staking contract, or signs another on-chain action. V3 positions are NFTs held by the wallet that minted them.
 - **Permissionless token selection:** curated assets are shown first, while the swap interface can resolve valid custom token addresses and merges the Trust Wallet BSC token list.
 - **On-chain quotes:** V2 and V3 routes read pools on BNB Smart Chain. Optional 1inch quotes are proxied server-side so its API credential is never sent to the browser.
+- **Indexed pool data:** pool lists, APR, charts and token analytics come from periodic on-chain snapshots served by the BitBlocks Finance info backend. They are estimates, not contract state.
 - **Explicit safeguards:** output minimums, transaction deadlines, route freshness, allowance checks, balance checks, and price-impact classification are implemented before execution.
 
 ## What the interface cannot guarantee
 
-The interface can validate inputs and simulate the route it knows about, but it cannot remove smart-contract risk, token-specific transfer behavior, market volatility, MEV, RPC failures, or impermanent loss. Always read the final wallet prompt.
+The interface can validate inputs and simulate the route it knows about, but it cannot remove smart-contract risk, token-specific transfer behavior, market volatility, MEV, RPC failures, impermanent loss, or a V3 position falling out of range. Always read the final wallet prompt.
 
 <Callout type="info">
   Start with [Connect a wallet](/guides), then read the guide for the action you intend to take. For contract behavior and addresses, use the [Protocol reference](/contracts).

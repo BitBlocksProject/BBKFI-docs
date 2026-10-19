@@ -1,0 +1,105 @@
+---
+title: Concentrated liquidity (V3)
+description: Choose a fee tier and price range, mint a BitBlocks V3 position NFT, and add, remove, or collect fees safely.
+---
+
+import { Callout, Steps, Tabs } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
+
+<PageIntro
+  eyebrow="Use the app · Liquidity V3"
+  title="Choose where your liquidity works."
+  description="BitBlocks V3 lets you place liquidity between a minimum and a maximum price. Inside that range it earns more fees per dollar than a V2 position; outside it, it earns nothing until the price returns."
+>
+  <div style={{marginTop: '1rem'}}><Pill>Position NFT</Pill><Pill tone="violet">4 fee tiers</Pill><Pill tone="slate">BBKFI-V3-POS</Pill><Pill tone="amber">Range risk</Pill></div>
+</PageIntro>
+
+## Key ideas
+
+<InfoGrid>
+  <InfoCard icon="layers" title="A range, not a curve"><p>Each position covers only the prices between its lower and upper tick. While the pool price is in range, your liquidity is used by swaps and earns a share of the fee.</p></InfoCard>
+  <InfoCard icon="spark" title="One NFT per position"><p>Minting creates an ERC-721 token, **BitBlocks Finance V3 Positions NFT-V1** (`BBKFI-V3-POS`), held by your wallet. Whoever holds the NFT controls the position.</p></InfoCard>
+  <InfoCard icon="coins" title="Fees stay separate"><p>V3 fees are not added back to the position. They accrue as unclaimed fees in both tokens until you collect them.</p></InfoCard>
+  <InfoCard icon="shield" title="Out of range = idle"><p>If the price moves outside your range, the position becomes 100% one token and stops earning fees. It is not closed; it earns again if the price returns.</p></InfoCard>
+</InfoGrid>
+
+## Fee tiers
+
+| Tier | Tick spacing | Interface hint | Range presets |
+|---|---|---|---|
+| **0.01%** | 1 | Best for very stable pairs | ±0.1%, ±0.5%, ±1% |
+| **0.05%** | 10 | Best for stable pairs | ±1%, ±5%, ±10% |
+| **0.3%** | 60 | Best for most pairs (default) | ±5%, ±10%, ±25% |
+| **1%** | 200 | Best for exotic pairs | ±10%, ±25%, ±50% |
+
+The same pair can have one pool per tier. The tier selector shows each tier's share of the pair's liquidity, or **Not created** when that pool does not exist yet. Every tier also offers **Full range**.
+
+A protocol share of the fee is configured per pool. New BitBlocks V3 pools start at **5% of the swap fee**, so in-range liquidity providers receive 95%. The factory owner can change it per pool between 0% and 40% through the timelock described in [Architecture](/contracts/architecture).
+
+## Create a position
+
+<Steps>
+
+### Open Create position
+
+Select **Create position** in the sidebar, or **Add liquidity** from a pool page. V3 is the default; keep the header switch on **V3**.
+
+### Select the pair and fee tier
+
+Choose two tokens and a tier. Prefer the tier that already holds most of the pair's liquidity unless you have a reason to start a new pool.
+
+### Set the starting price, if the pool is new
+
+When the pool is **Not created**, enter the starting price. The pool is created and initialized at that price in the same transaction as your deposit. Make sure it matches the wider market; bots can arbitrage a wrong starting price immediately.
+
+### Choose the price range
+
+Pick **Full range**, a ± preset, type min and max prices, or drag the handles on the price chart. When the selected pool has price history, the chart combines its candles with the liquidity distribution; otherwise it shows the liquidity distribution alone. **Switch price direction** flips the quote between the two tokens. Prices snap to the tier's tick spacing.
+
+### Enter deposit amounts
+
+Enter one amount; the other is derived from the current price and your range. A range entirely above the current price takes only one token, and a range entirely below takes only the other. Select **BNB** as a token to deposit native BNB; the position manager wraps it into the WBNB pool side. **Max** on native BNB keeps a small gas reserve.
+
+### Check the estimated APR
+
+The form shows an estimated APR for your range. It assumes the pool's LP fees of the last 24 hours repeat daily, the price stays inside your range, and the pool's active liquidity does not change. It is not a guarantee.
+
+### Approve and supply
+
+Approve each ERC-20 for the BitBlocks V3 NonfungiblePositionManager. The app requests a maximum allowance and falls back to the exact amount when the token does not accept it. Review the summary and confirm **Supply**, or **Create & supply** for a new pool. Slippage and deadline settings protect the mint.
+
+</Steps>
+
+<Callout type="info">
+  After the mint, **View position** opens `/liquidity/v3/<tokenId>`. The position also appears in **My positions** and on the pool page.
+</Callout>
+
+## Manage a position
+
+The position page shows the status (**In range**, **Out of range** or closed), the price range over the pool chart, current amounts and USD value, and unclaimed fees. Only the wallet that holds the NFT can manage it.
+
+<Tabs items={['Increase', 'Remove', 'Collect fees']}>
+  <Tabs.Tab>
+    **Increase liquidity** adds tokens to the same range at the current price ratio. It needs the same ERC-20 approvals as a new position, and **Pay with BNB** can supply the WBNB side as native BNB.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    **Remove liquidity** withdraws a percentage of the position and, in the same transaction, collects the withdrawn tokens plus any unclaimed fees. **Receive BNB** unwraps the WBNB side. The NFT is kept even at 100%, so the position remains visible as closed.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    **Collect** claims unclaimed fees of one position without touching its liquidity. **Collect all V3 fees** in My positions claims every V3 position in one transaction, optionally unwrapping WBNB to BNB.
+  </Tabs.Tab>
+</Tabs>
+
+Every action is sent as one `multicall` to the position manager, so wrapping, unwrapping and collecting happen atomically.
+
+## Risks specific to V3
+
+- **Range risk:** a narrow range earns more while in range but goes out of range sooner. Out-of-range liquidity earns nothing.
+- **Impermanent loss is amplified:** concentrated positions convert fully to the weaker asset faster when the price moves through the range.
+- **Shallow pools:** BitBlocks V3 pools are young and can be thin. APR from a short history can change sharply.
+- **NFT custody:** transferring or approving the NFT to another address hands over control of the position.
+- **No farm yet:** V3 positions currently earn trading fees only. MasterChef BBKFI rewards apply to staked V2 LP.
+
+<Callout type="warning">
+  The interface does not rebalance positions. Check your range regularly, and remove or recreate a position yourself when the market moves away from it.
+</Callout>

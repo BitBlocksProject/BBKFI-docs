@@ -1,6 +1,6 @@
 ---
 title: Manage liquidity
-description: Create, add to, inspect, and remove BitBlocks V2 liquidity positions.
+description: Browse BitBlocks V2 and V3 pools, track your positions, and create, add to, or remove V2 liquidity.
 ---
 
 import { Callout, Steps } from 'nextra/components'
@@ -8,36 +8,61 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 
 <PageIntro
   eyebrow="Use the app · Liquidity"
-  title="Supply two assets. Receive one position token."
-  description="BitBlocks liquidity uses V2-style constant-product pairs. Supplying both reserves mints fungible LP tokens that represent a proportional claim on the pool."
+  title="Two pool designs. One place to manage them."
+  description="BitBlocks Finance runs a V3 concentrated-liquidity AMM next to the original V2 constant-product AMM. The Liquidity area lists both, tracks your positions, and opens new ones."
 >
-  <div style={{marginTop: '1rem'}}><Pill>BitBlocks V2</Pill><Pill tone="slate">ERC-20 LP tokens</Pill><Pill tone="amber">Impermanent loss</Pill></div>
+  <div style={{marginTop: '1rem'}}><Pill>BitBlocks V3 default</Pill><Pill tone="slate">V2 LP tokens</Pill><Pill tone="amber">Impermanent loss</Pill></div>
 </PageIntro>
 
-## How a position works
+## V3 or V2?
+
+| | BitBlocks V3 | BitBlocks V2 |
+|---|---|---|
+| Position | NFT with its own price range | Fungible LP token (ERC-20) |
+| Liquidity | Concentrated between a min and max price | Spread across every price |
+| Swap fee | Pool tier: 0.01%, 0.05%, 0.3% or 1% | 0.25% per hop |
+| Fees | Accrue separately; collected on demand | Added to pool reserves |
+| Farming | Not farmable in the app yet | Eligible pairs can be staked in MasterChef |
+| Effort | Out-of-range positions stop earning and need attention | Passive |
+
+**Create position** opens V3 by default. A **V3 / V2** switch in the page header selects the classic flow. The V3 guide is [Concentrated liquidity (V3)](/guides/concentrated-liquidity); the rest of this page covers the shared screens and V2.
+
+## The Liquidity area
 
 <InfoGrid>
-  <InfoCard icon="layers" title="Two reserves"><p>Every pair holds `token0` and `token1`. Trades update those reserves while preserving the constant-product invariant after fees.</p></InfoCard>
-  <InfoCard icon="coins" title="One LP balance"><p>LP token ownership divided by total LP supply determines the share of both underlying reserves returned on removal.</p></InfoCard>
-  <InfoCard icon="route" title="0.25% swap fee"><p>The verified BitBlocks pair subtracts 25 basis points from input in its invariant check. Fees remain in pool value unless the optional protocol fee is active.</p></InfoCard>
-  <InfoCard icon="shield" title="Ratio risk"><p>Arbitrage changes the reserve ratio as external prices move. The position can underperform simply holding both assets.</p></InfoCard>
+  <InfoCard icon="layers" title="Pools"><p>The default tab lists tracked BitBlocks V3 and V2 pools with TVL, 24h volume, 24h fees and APR. Filter by **All / V3 / V2**, **Farms**, or **My liquidity**, search by token or address, and sort by TVL, volume, fees or APR.</p></InfoCard>
+  <InfoCard icon="wallet" title="My positions"><p>Open it with `?tab=positions`. V3 NFTs and V2 LP, in the wallet or staked in farms, appear in one list with USD value, APR, status and a **Manage** menu, plus a summary of total value, staked value and pending rewards.</p></InfoCard>
+  <InfoCard icon="route" title="Pool page"><p>Each pool has a page with stats, tokens locked, Price, Volume, TVL and Fees charts, a liquidity distribution chart for V3 pools, your positions in that pool, and a BscScan link for transactions.</p></InfoCard>
+  <InfoCard icon="coins" title="Pending rewards"><p>My positions groups unclaimed V3 fees and MasterChef BBKFI by token. **Collect all V3 fees** claims every V3 position in one transaction, and farm rewards can be harvested per row or all at once.</p></InfoCard>
 </InfoGrid>
 
-## Add liquidity
+Pools under US$ 10 of TVL are hidden unless you hold liquidity in them, search for them, or show small pools. A row is tagged when your wallet has V3 liquidity, V2 LP, or a farm stake in that pool.
+
+### How pool APR is calculated
+
+Pool data comes from on-chain snapshots taken about every five minutes by the BitBlocks Finance info backend.
+
+- **Fee APR** annualizes the LP share of fees from the last 24 hours against TVL. When 24 hours of data are missing, it falls back to 7-day fees; a new pool shows that it is still settling.
+- **V2 farm APR** is added for pairs with an active MasterChef farm, and only applies to LP that is staked.
+- **V3 position APR** scales the pool's fees by the share of active liquidity your position provides, so an out-of-range position earns no fees.
+
+APR is an observation of recent activity, not a promised rate.
+
+## Add V2 liquidity
 
 <Steps>
 
-### Open Liquidity
+### Choose Create position, then V2
 
-The landing view searches tracked pairs and the connected wallet's LP balances. Select an existing pool or choose **Add Liquidity**.
+Select **Create position** in the sidebar and switch the header toggle to **V2**, or follow a V2 link from a pool or farm.
 
 ### Select both assets
 
-Choose two different tokens. Native BNB is represented by WBNB inside the pair while the router handles wrapping during supply.
+Choose two different tokens. Native BNB is represented by WBNB inside the pair while the router handles wrapping during supply. Equivalent BNB/WBNB pairs are rejected.
 
 ### Enter one amount
 
-For an existing pair, the other amount is derived from current reserves. For a new pair with no reserves, the first provider chooses the initial price ratio.
+For an existing pair, the other amount is derived from current reserves. For a new pair with no reserves, the first provider chooses the initial price ratio. Supply is blocked when an amount exceeds the wallet balance.
 
 ### Review the preview
 
@@ -45,7 +70,7 @@ Check both amounts, estimated pool share, LP output, and minimum accepted amount
 
 ### Approve ERC-20 assets
 
-Approve each ERC-20 that the router cannot already spend. Native BNB has no ERC-20 approval step.
+Approve each ERC-20 that the BitBlocks Router cannot already spend. Native BNB has no ERC-20 approval step.
 
 ### Supply
 
@@ -57,17 +82,23 @@ Confirm the transaction. The factory creates the pair if it does not exist, and 
   On the first mint, the pair permanently locks `MINIMUM_LIQUIDITY` to the zero address. This is standard V2 behavior and prevents the pool from being completely drained by burning all LP supply.
 </Callout>
 
-## Remove liquidity
+### V2 fees
+
+The pair charges 0.25% on each swap input. The factory's `feeTo` is set, so the pair mints protocol LP tokens worth 8/25 of fee growth whenever liquidity is added or removed. Liquidity providers keep about **0.17%** of each trade.
+
+## Stake or remove V2 liquidity
+
+From **My positions**, a V2 row shows LP in the wallet and LP staked in a MasterChef farm. An amber alert flags LP left unstaked in a pair that has a live farm. Select **Stake** in the row's rewards cell, or **Stake LP** in the alert, to deposit wallet LP in its farm without leaving the page.
 
 <Steps>
 
-### Open one of your positions
+### Open the Manage menu
 
-Select a detected LP position and choose the remove action.
+Choose **Unstake LP** to return staked LP to the wallet, or **Remove liquidity**. **Add liquidity** opens the V2 add flow for the same pair.
 
-### Choose the LP amount
+### Choose what to remove
 
-Use the percentage controls or enter a specific amount. The preview estimates both tokens returned from current reserves.
+For staked LP, choose **Unstake only** to return LP to the wallet, or **Unstake & remove** to withdraw from the farm and remove liquidity. Unstaking also pays out pending BBKFI.
 
 ### Authorize the LP token
 
@@ -81,11 +112,11 @@ The router burns the LP tokens and transfers the proportional reserves back to t
 
 ## Risks to evaluate
 
-- **Impermanent loss:** divergence between the two assets can outweigh fee income.
+- **Impermanent loss:** divergence between the two assets can outweigh fee income, in V2 and V3 alike.
 - **Low liquidity:** small reserves increase price impact and can make exit values volatile.
 - **Token behavior:** fee-on-transfer, rebasing, pausable, or malicious tokens can behave differently from a standard ERC-20.
-- **Pool creation:** anyone can create a pair. A pair's existence is not an endorsement of either token.
-- **Staked LP tokens:** LP deposited in Earn will not appear as a freely available wallet balance until withdrawn.
+- **Pool creation:** anyone can create a pair or a V3 pool. A pool's existence is not an endorsement of either token.
+- **Staked LP tokens:** LP deposited in a farm will not appear as a freely available wallet balance until withdrawn.
 
 <Callout type="warning">
   Never supply at an unintended initial ratio. In a new pool, bots can immediately arbitrage a price that differs from the wider market.

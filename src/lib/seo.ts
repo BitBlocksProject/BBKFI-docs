@@ -1,7 +1,7 @@
 export const SITE_URL = 'https://docs.bitblocks.finance'
 export const SITE_NAME = 'BitBlocks Finance Docs'
 export const SITE_DESCRIPTION =
-  'Understand and use BitBlocks Finance: routed swaps, liquidity, staking, tokens, risks, and protocol contracts on BNB Smart Chain.'
+  'Understand and use BitBlocks Finance: routed swaps, V2 and concentrated-liquidity V3 pools, staking, tokens, risks, and protocol contracts on BNB Smart Chain.'
 
 export const SOCIAL = {
   twitter: 'https://x.com/BBKFI',

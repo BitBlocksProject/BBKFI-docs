@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: Contract call flows, formulas, permissions, and risk boundaries in BitBlocks Finance.
+description: Contract call flows, formulas, permissions, governance, and risk boundaries in BitBlocks Finance V2 and V3.
 ---
 
 import { Callout, Tabs } from 'nextra/components'
@@ -8,20 +8,25 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
 
 <PageIntro
   eyebrow="Protocol reference · Architecture"
-  title="Four execution paths. One wallet boundary."
-  description="The frontend reads several providers, but every state-changing action resolves to a concrete router, pair, or staking contract before the wallet signs."
+  title="Several execution paths. One wallet boundary."
+  description="The frontend reads several providers, but every state-changing action resolves to a concrete router, position manager, pair, or staking contract before the wallet signs."
 >
-  <div style={{marginTop: '1rem'}}><Pill>V2 AMM</Pill><Pill tone="violet">Farm accounting</Pill><Pill tone="amber">Privileged parameters</Pill></div>
+  <div style={{marginTop: '1rem'}}><Pill>V2 + V3 AMM</Pill><Pill tone="violet">Farm accounting</Pill><Pill tone="amber">Privileged parameters</Pill></div>
 </PageIntro>
 
 ## System map
 
 ```text
 Connected wallet
-  ├─ Swap ──────── quote engine ── selected router ── pair(s)
-  ├─ Liquidity ─── BitBlocks Router ── Factory ── pair / LP token
+  ├─ Swap ──────── quote engine ─┬─ BitBlocks Router ──────── V2 pair(s)
+  │                              ├─ V3 SwapRouter ─────────── V3 pool(s)
+  │                              ├─ BitBlocks Smart Router ── V2 pair + V3 pool
+  │                              ├─ PancakeSwap Smart Router ─ PancakeSwap V2/V3
+  │                              └─ 1inch router
+  ├─ Liquidity V3 ─ NonfungiblePositionManager ── V3 pool ── position NFT
+  ├─ Liquidity V2 ─ BitBlocks Router ── Factory ── pair / LP token
   ├─ Earn ───────── MasterChef (many pools) or SmartChef (one pool)
-  └─ Read-only ──── RPC + app API routes ── metrics / token context
+  └─ Read-only ──── RPC + app API routes + info backend ── metrics / pools / charts
 ```
 
 ## BitBlocks V2 AMM
@@ -46,21 +51,83 @@ amountOut = amountInWithFee × reserveOut
 
 The pair's swap check subtracts `25` basis points from each input balance before checking `x × y ≥ k`. That is the source-backed reason the frontend labels BitBlocks V2 hops with a **0.25% LP fee**.
 
-When `feeTo` is non-zero, the pair can mint protocol LP tokens from growth in `sqrt(k)` during mint or burn. The configured recipient and current activation state are live factory state.
+### Protocol fee
+
+When `feeTo` is non-zero, `_mintFee` mints protocol LP tokens during mint or burn from growth in `sqrt(k)`:
+
+```text
+liquidity = totalSupply × (rootK − rootKLast) × 8
+            / (rootK × 17 + rootKLast × 8)
+```
+
+That is 8/25 of fee growth, or about 0.08 of the 0.25 percentage points. `feeTo` is currently set on the live factory, so the protocol fee is active and liquidity providers keep about 0.17% per trade.
+
+## BitBlocks V3 AMM
+
+BitBlocks V3 is a fork of PancakeSwap V3 (`v3-core` and `v3-periphery`), which is itself a fork of Uniswap V3. The pool math is unchanged; the differences are names, callbacks (`bitblocksV3SwapCallback`), fee tiers, the default protocol fee, and governance.
+
+### Pools and fee tiers
+
+| Fee | Tick spacing |
+|---|---|
+| 0.01% (`100`) | 1 |
+| 0.05% (`500`) | 10 |
+| 0.3% (`3000`) | 60 |
+| 1% (`10000`) | 200 |
+
+Pools are deployed by `BitBlocksV3PoolDeployer` with `CREATE2`; the factory only registers them. A pool address is derived from the deployer, the sorted token pair, the fee, and the pool init code hash.
+
+Each pool tracks `sqrtPriceX96`, the current tick, active liquidity, and global fee growth. Liquidity is added per tick range, and swaps cross initialized ticks as the price moves. Only liquidity whose range contains the current price earns fees.
+
+### Protocol fee
+
+New pools start with `feeProtocol = 500` for each direction, meaning **5% of the swap fee** goes to the protocol and 95% to in-range liquidity providers. The factory owner can set a pool between 0% and 40% with `setFeeProtocol` and withdraw accrued protocol fees with `collectProtocol`.
+
+### Position manager
+
+`NonfungiblePositionManager` mints an ERC-721 for each position (**BitBlocks Finance V3 Positions NFT-V1**, `BBKFI-V3-POS`) and stores its pool key, tick range, liquidity, and owed fees. The interface sends every action as one `multicall`:
+
+| Action | Calls |
+|---|---|
+| Create position | `createAndInitializePoolIfNecessary` (new pool only) → `mint` → `refundETH` when paying in BNB |
+| Increase | `increaseLiquidity` → `refundETH` when paying in BNB |
+| Remove | `decreaseLiquidity` → `collect` → `unwrapWETH9` / `sweepToken` when receiving BNB |
+| Collect | `collect`, optionally with `unwrapWETH9` / `sweepToken` |
+
+`increaseLiquidity`, `decreaseLiquidity` and `collect` check `deadline`, `amount0Min` and `amount1Min` where applicable. `decreaseLiquidity`, `collect` and `burn` require the caller to be the NFT owner or approved.
+
+### Routers
+
+<InfoGrid>
+  <InfoCard icon="route" title="SwapRouter"><p>Uniswap-V3-style router for `exactInput` and `exactInputSingle` over BitBlocks V3 pools. The deadline lives inside each params struct.</p></InfoCard>
+  <InfoCard icon="layers" title="BitBlocks Smart Router"><p>Fork of the PancakeSwap Smart Router with BitBlocks V2 and V3 init code hashes, no StableSwap, and no owner. The interface uses it for two-hop routes that combine a BitBlocks V2 pair and a V3 pool.</p></InfoCard>
+</InfoGrid>
 
 ## Swap quote architecture
 
-<Tabs items={['V2', 'V3', '1inch']}>
+<Tabs items={['V2', 'BitBlocks V3', 'Mixed', 'PancakeSwap V3', '1inch']}>
   <Tabs.Tab>
-    The frontend generates direct and base-token candidate paths, batches `getAmountsOut` across BitBlocks and PancakeSwap V2 routers, and keeps the highest successful output. It reads pair reserves to derive a mid-price and price impact.
+    The frontend generates direct and base-token candidate paths, batches `getAmountsOut` across the BitBlocks and PancakeSwap V2 routers, and keeps the best output per router. It reads pair reserves to derive a mid-price and price impact. PancakeSwap V2 is quoted on its classic router but executed through the PancakeSwap Smart Router so the platform fee can be taken on-chain.
   </Tabs.Tab>
   <Tabs.Tab>
-    PancakeSwap V3 quotes probe fee tiers 0.01%, 0.05%, 0.25%, and 1% through Quoter V2. The winning tier is executed through the PancakeSwap Smart Router.
+    The quote engine finds live BitBlocks V3 pools for the pair, plus one-intermediate routes through WBNB, USDT, BBKFI or WBBK, across all four fee tiers. It quotes them with QuoterV2 and executes the best one through the V3 SwapRouter. Pool `sqrtPriceX96` values give the mid-price.
   </Tabs.Tab>
   <Tabs.Tab>
-    When enabled, the browser calls same-origin Next.js proxy routes. The server adds the 1inch API credential, applies short caching, deduplication and a circuit breaker, then returns quote or transaction data. The API key never needs to reach the browser.
+    For routes A → X → B where one hop is a BitBlocks V2 pair and the other a BitBlocks V3 pool, the engine quotes the first leg on both AMMs, keeps the best leg per intermediate and AMM, then quotes the second leg on the other AMM. The winner executes through the BitBlocks Smart Router in one `multicall`.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    PancakeSwap V3 quotes probe fee tiers 0.01%, 0.05%, 0.25%, and 1% through PancakeSwap Quoter V2. The winning single-hop tier is executed through the PancakeSwap Smart Router with the platform fee.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    When enabled, the browser calls same-origin Next.js proxy routes. The server adds the 1inch API credential, applies short caching, deduplication and a circuit breaker, then returns quote or transaction data with the partner fee. The API key never needs to reach the browser.
   </Tabs.Tab>
 </Tabs>
+
+All successful quotes are reduced by the platform fee where it applies, adjusted for estimated gas when BNB is on one side, and ranked by the resulting output.
+
+### Platform fee on third-party routes
+
+PancakeSwap routes are built as `multicall(deadline, [swap to the router, sweepTokenWithFee | unwrapWETH9WithFee])`, so the router holds the output for an instant and pays the user minus 0.15% in the same transaction. Because the Smart Router checks `amountMinimum` before taking its fee, the interface grosses up the user's minimum received before sending it. 1inch receives the same fee as its `fee` and referrer parameters. BitBlocks routes never take this fee.
 
 ## MasterChef
 
@@ -71,13 +138,13 @@ poolReward = blocks × bbkfiPerBlock × allocPoint / totalAllocPoint
 pending = user.amount × accBBKFIPerShare / 1e12 − rewardDebt
 ```
 
-During `updatePool`, the contract mints the calculated pool reward to itself and an additional `poolReward / 10` to the developer address. A deposit first settles pending rewards, transfers the deposit token, applies any `depositFeeBP`, then updates reward debt. Withdraw follows the same accounting before returning principal.
+During `updatePool`, the contract mints the calculated pool reward to itself and an additional `poolReward / 10` to the developer address. A pool with zero stake skips minting. A deposit first settles pending rewards, transfers the deposit token, applies any `depositFeeBP`, then updates reward debt. Withdraw follows the same accounting before returning principal.
 
 <InfoGrid>
-  <InfoCard icon="coins" title="Owner controls"><p>`add`, `set`, and `updateEmissionRate` are `onlyOwner`. Pool weight and deposit fee can therefore change.</p></InfoCard>
+  <InfoCard icon="coins" title="Owner controls"><p>`add`, `set`, and `updateEmissionRate` are `onlyOwner`. Pool weight and deposit fee can therefore change. The owner is currently an externally owned account, not a timelock.</p></InfoCard>
   <InfoCard icon="wallet" title="Role controls"><p>The current developer address can rotate itself, and the current fee address can rotate itself.</p></InfoCard>
   <InfoCard icon="shield" title="Emergency exit"><p>`emergencyWithdraw` returns deposited tokens, resets amount and reward debt, and does not pay pending rewards.</p></InfoCard>
-  <InfoCard icon="code" title="Mint dependency"><p>Pool updates require MasterChef to retain authority to call BBKFI `mint`.</p></InfoCard>
+  <InfoCard icon="code" title="Mint dependency"><p>Pool updates require MasterChef to retain authority to call BBKFI `mint`. BBKFI's owner is the MasterChef.</p></InfoCard>
 </InfoGrid>
 
 ## SmartChef
@@ -94,15 +161,32 @@ Each SmartChef is initialized once by its factory with stake token, reward token
   SmartChef rewards are pre-funded and the owner can stop or withdraw rewards. Treat the displayed end time and APR as current observations, not immutable promises.
 </Callout>
 
+## Governance and admin roles
+
+| Contract | Controlled by | Privileged actions |
+|---|---|---|
+| BitBlocks V3 Factory | TimelockController (48h delay) ← Safe multisig | `setFeeProtocol`, `collectProtocol`, `enableFeeAmount`, `setLmPoolDeployer`, `setOwner`, and related settings |
+| ProxyAdmin (NFT descriptor) | TimelockController ← Safe multisig | Upgrade the position NFT metadata implementation |
+| BitBlocks Smart Router | Nobody | No owner functions |
+| V3 SwapRouter, QuoterV2, TickLens | Nobody | No owner functions |
+| BitBlocks V2 Factory | `feeToSetter` address | `setFeeTo`, `setFeeToSetter` |
+| MasterChef | Owner EOA | `add`, `set`, `updateEmissionRate` |
+| SmartChef | Each pool's owner | Stop rewards, withdraw rewards, recover unrelated tokens |
+
+The Safe is the timelock's only proposer and executor, and the deployer renounced the timelock admin role. Any V3 factory change is therefore scheduled publicly on-chain at least 48 hours before it can execute.
+
 ## Upgradeability and code changes
 
-The mirrored BitBlocks Router, Factory/Pair, MasterChef, BBKFI, and SmartChef sources do not use proxy delegation or expose an upgrade function. Changing implementation logic requires a new deployment. That does **not** remove privileged configuration functions from the existing deployments.
+The BitBlocks V2 Router, Factory/Pair, MasterChef, BBKFI, SmartChef, V3 pools, V3 factory, position manager, and routers do not use proxy delegation or expose an upgrade function. Changing their logic requires a new deployment.
 
-This distinction matters: **non-upgradeable code can still contain mutable parameters and admin roles.**
+The one exception is the **NonfungibleTokenPositionDescriptor**, which builds the NFT's `tokenURI`. It sits behind a transparent upgradeable proxy administered by the timelock-owned ProxyAdmin. Upgrading it can change how positions are described, not pool balances or position ownership.
+
+Non-upgradeable code can still contain mutable parameters and admin roles, as listed above.
 
 ## Failure boundaries
 
 - RPC failures can prevent quotes or pool reads without changing contract state.
+- Pool lists, APR and charts depend on the info backend; if it is unavailable, those views degrade while on-chain actions still work.
 - A provider returning no route is not equivalent to a protocol-wide liquidity failure.
 - A token that violates common ERC-20 expectations can break approval, transfer, reserve, or quote assumptions.
 - Slippage and deadline checks deliberately revert when state changes beyond the user's limits.

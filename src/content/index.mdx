@@ -1,6 +1,6 @@
 ---
 title: BitBlocks Finance Documentation
-description: Code-backed guides and protocol reference for BitBlocks Finance on BNB Smart Chain.
+description: Code-backed guides and protocol reference for BitBlocks Finance swaps, V2 and V3 liquidity, and rewards on BNB Smart Chain.
 theme:
   layout: full
   sidebar: false
@@ -28,9 +28,9 @@ import { FeatureGrid, HomeHero, SourceOfTruth, StatsStrip } from '@/components/d
 
       <FeatureGrid items={[
         { icon: 'wallet', label: 'Setup', title: 'Get connected', description: 'Prepare a compatible wallet, switch to BNB Smart Chain, and understand approvals before your first transaction.', href: '/guides' },
-        { icon: 'route', label: 'Trade', title: 'Route a swap', description: 'See how BitBlocks compares V2, V3, and optional aggregator quotes while enforcing slippage and price-impact checks.', href: '/guides/swap' },
-        { icon: 'layers', label: 'Provide', title: 'Manage liquidity', description: 'Create or join a V2 pair, receive LP tokens, understand pool share, and remove liquidity safely.', href: '/guides/liquidity' },
-        { icon: 'coins', label: 'Earn', title: 'Stake assets', description: 'Compare MasterChef farms and time-bounded SmartChef pools, then stake, harvest, or withdraw.', href: '/guides/earn' },
+        { icon: 'route', label: 'Trade', title: 'Route a swap', description: 'See how BitBlocks compares its own V2, V3 and mixed routes with PancakeSwap and optional 1inch quotes while enforcing slippage and price-impact checks.', href: '/guides/swap' },
+        { icon: 'layers', label: 'Provide', title: 'Provide liquidity', description: 'Browse pools, open a concentrated-liquidity V3 position in a price range, or supply a classic V2 pair.', href: '/guides/liquidity' },
+        { icon: 'coins', label: 'Earn', title: 'Stake assets', description: 'Stake V2 LP in MasterChef farms or tokens in time-bounded SmartChef pools, then harvest or withdraw.', href: '/guides/earn' },
       ]} />
     </section>
 
@@ -42,7 +42,7 @@ import { FeatureGrid, HomeHero, SourceOfTruth, StatsStrip } from '@/components/d
           <div className="docs-eyebrow"><span />At a glance</div>
           <h2>Defaults that shape every transaction.</h2>
         </div>
-        <p>These values come from the current interface and verified BitBlocks V2 contracts. Provider availability and live pool conditions can still change.</p>
+        <p>These values come from the current interface and the deployed BitBlocks V2 and V3 contracts. Provider availability and live pool conditions can still change.</p>
       </div>
       <StatsStrip />
     </section>

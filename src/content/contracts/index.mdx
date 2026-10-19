@@ -1,6 +1,6 @@
 ---
 title: Protocol contracts
-description: Scope and trust boundaries of the contracts used by BitBlocks Finance.
+description: Scope and trust boundaries of the BitBlocks V2, BitBlocks V3, and staking contracts used by BitBlocks Finance.
 ---
 
 import { Callout } from 'nextra/components'
@@ -11,27 +11,43 @@ import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
   title="Know which code receives the call."
   description="BitBlocks Finance combines native protocol contracts with external liquidity integrations. This reference keeps those trust boundaries explicit."
 >
-  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Solidity 0.5–0.6</Pill><Pill tone="amber">No proxy in mirrored core source</Pill></div>
+  <div style={{marginTop: '1rem'}}><Pill>BNB Smart Chain</Pill><Pill tone="slate">Solidity 0.5–0.7</Pill><Pill tone="violet">V3 owned by a timelock</Pill></div>
 </PageIntro>
 
-## BitBlocks protocol contracts
+## BitBlocks V2
 
 <InfoGrid>
-  <InfoCard icon="route" title="Router"><p>The user-facing V2 entry point for swaps, adding liquidity, removing liquidity, and native BNB wrapping paths.</p></InfoCard>
+  <InfoCard icon="route" title="Router"><p>The V2 entry point for swaps, adding liquidity, removing liquidity, and native BNB wrapping paths.</p></InfoCard>
   <InfoCard icon="layers" title="Factory and pairs"><p>The factory creates deterministic pair contracts. Each pair holds two reserves, mints LP tokens, and enforces the 0.25% fee-adjusted invariant.</p></InfoCard>
-  <InfoCard icon="coins" title="MasterChef"><p>A single farm manager with multiple pool IDs, BBKFI minting, pool weights, deposit fees, reward debt and emergency withdrawal.</p></InfoCard>
+</InfoGrid>
+
+## BitBlocks V3
+
+A concentrated-liquidity AMM forked from PancakeSwap V3, itself a fork of Uniswap V3. Solidity 0.7.6.
+
+<InfoGrid>
+  <InfoCard icon="layers" title="Factory, deployer and pools"><p>The factory registers pools per pair and fee tier; the PoolDeployer deploys them with `CREATE2`. Fee tiers are 0.01%, 0.05%, 0.3% and 1%.</p></InfoCard>
+  <InfoCard icon="spark" title="Position manager"><p>The NonfungiblePositionManager creates and initializes pools, mints position NFTs (`BBKFI-V3-POS`), and handles increase, decrease, collect and burn.</p></InfoCard>
+  <InfoCard icon="route" title="Swap routers"><p>The V3 SwapRouter executes pure V3 routes. The BitBlocks Smart Router executes routes that mix BitBlocks V2 pairs and V3 pools in one transaction.</p></InfoCard>
+  <InfoCard icon="code" title="Read helpers"><p>QuoterV2 quotes V3 swaps, TickLens reads initialized ticks for liquidity charts, and an interface Multicall batches reads.</p></InfoCard>
+</InfoGrid>
+
+## Rewards
+
+<InfoGrid>
+  <InfoCard icon="coins" title="MasterChef"><p>A single farm manager with multiple pool IDs, BBKFI minting, pool weights, deposit fees, reward debt and emergency withdrawal. It is the owner and only minter of BBKFI.</p></InfoCard>
   <InfoCard icon="spark" title="SmartChef"><p>Independent single-pool staking contracts with pre-funded rewards, per-block rate, fixed start/end blocks and optional wallet limits.</p></InfoCard>
 </InfoGrid>
 
 ## External integrations
 
-The quote engine also knows PancakeSwap V2, PancakeSwap V3, and optional 1inch endpoints. These are **not BitBlocks-owned protocol contracts**. A winning external route can change the approval spender and execution target.
+The quote engine also knows PancakeSwap V2, PancakeSwap V3, and optional 1inch endpoints. These are **not BitBlocks-owned protocol contracts**. A winning external route changes the approval spender and execution target, and adds the 0.15% platform fee.
 
 | Integration | Used for | Enabled by |
 |---|---|---|
-| PancakeSwap V2 Router | V2 quote and execution | Included in router registry |
+| PancakeSwap V2 Router | V2 quotes | Included in router registry |
 | PancakeSwap Quoter V2 | V3 fee-tier quotes | Included in V3 quote path |
-| PancakeSwap Smart Router | V3 execution | Included in V3 quote path |
+| PancakeSwap Smart Router | Execution of PancakeSwap V2 and V3 routes, with on-chain platform fee | Included in router registry |
 | 1inch Classic Swap v6 | Aggregated quotes and transaction data | Environment provider flag + server API key |
 
 <Callout type="warning">
@@ -40,6 +56,6 @@ The quote engine also knows PancakeSwap V2, PancakeSwap V3, and optional 1inch e
 
 ## Where to continue
 
-- [Contract addresses](/contracts/addresses) — canonical values used by the current frontend configuration.
-- [Architecture](/contracts/architecture) — call flows, formulas, permissions, and failure boundaries.
+- [Contract addresses](/contracts/addresses) — canonical values used by the current frontend configuration and V3 deployment record.
+- [Architecture](/contracts/architecture) — call flows, formulas, permissions, governance, and failure boundaries.
 - [Frontend reference](/contracts/frontend-reference) — route providers, defaults, token registry, and deep links.
