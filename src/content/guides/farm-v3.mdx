@@ -1,0 +1,93 @@
+---
+title: Farm V3 (coming soon)
+description: How the upcoming BitBlocks Farm V3 pays BBKFI to staked V3 positions, the two-week V2 LP migration schedule, and how to move from V2 LP to V3.
+---
+
+import { Callout, Steps } from 'nextra/components'
+import { InfoCard, InfoGrid, PageIntro, Pill } from '@/components/docs-ui'
+
+<PageIntro
+  eyebrow="Use the app · Farm V3"
+  title="Earn BBKFI where your liquidity works."
+  description="Farm V3 lets you stake a BitBlocks V3 position NFT and earn BBKFI on top of trading fees. Rewards are paid every second, and only to liquidity that is in range."
+>
+  <div style={{marginTop: '1rem'}}><Pill>Coming soon</Pill><Pill tone="violet">Position NFT</Pill><Pill tone="slate">~38.4k BBKFI/day</Pill><Pill tone="amber">Range risk</Pill></div>
+</PageIntro>
+
+<Callout type="info">
+  **Farm V3 is not live in the app yet.** This page explains how it will work and how to prepare. The two-week V2 LP migration starts on the day Farm V3 goes live in the app, and the exact dates will be announced then.
+</Callout>
+
+## How Farm V3 works
+
+<InfoGrid>
+  <InfoCard icon="spark" title="Stake the NFT"><p>You stake a V3 position NFT (`BBKFI-V3-POS`) in the farm. Withdrawing returns the same NFT to your wallet together with any pending BBKFI.</p></InfoCard>
+  <InfoCard icon="layers" title="Only in-range liquidity earns"><p>Each second, the pool's BBKFI is split among staked positions whose range contains the current price, in proportion to their liquidity. An out-of-range position earns no BBKFI, just as it earns no trading fees.</p></InfoCard>
+  <InfoCard icon="coins" title="Fees keep accruing"><p>A staked position still earns trading fees. You can collect them, and add or remove liquidity, while the position stays staked.</p></InfoCard>
+  <InfoCard icon="route" title="Narrow ranges earn more, for less time"><p>A narrow range holds more liquidity per dollar, so it takes a bigger share while in range, but it leaves the range sooner. Check your range as you would for fees.</p></InfoCard>
+</InfoGrid>
+
+## Rewards at launch
+
+Farm V3 receives 1,000 of the 5,000 allocation points of the BBKFI MasterChef, about **38,400 BBKFI per day** at one BBKFI per block and roughly 192,000 blocks per day. That amount is split between six V3 pools:
+
+| Pool | Fee tier | Share of Farm V3 rewards | About BBKFI per day |
+|---|---|---|---|
+| WBNB-BBKFI | 0.3% | 40% | 15,360 |
+| USDT-BBKFI | 0.3% | 23% | 8,780 |
+| WBBK-BBKFI | 0.3% | 17% | 6,580 |
+| USDT-WBNB | 0.05% | 11% | 4,390 |
+| WBNB-WBBK | 0.3% | 6% | 2,190 |
+| USDT-WBBK | 0.3% | 3% | 1,100 |
+
+These are the same six pairs that have V2 LP farms today. Daily amounts are estimates: they follow BSC block times, and APR also depends on the BBKFI price and on how much liquidity is staked in range.
+
+The farm distributes rewards over rolling one-day periods and tops itself up from the MasterChef as people use it, so no keeper is needed. To keep every pool's rewards flowing even when no user liquidity is in range, the protocol treasury keeps a small full-range position staked in each of the six pools. Its share shrinks as user liquidity grows.
+
+## V2 LP migration schedule
+
+Once Farm V3 is live, the V2 LP farms wind down over two weeks:
+
+| When | V2 LP farms | Farm V3 |
+|---|---|---|
+| Launch day | Unchanged, about 33,600 BBKFI per day | Starts at about 38,400 BBKFI per day |
+| Launch + 7 days | Rewards cut by 50%, about 16,800 BBKFI per day | Unchanged |
+| Launch + 14 days | Rewards end | Unchanged |
+
+After the BBKFI rewards end, V2 LP keeps earning its share of V2 trading fees. Only the farm rewards stop.
+
+<Callout type="info">
+  **Single-token staking does not change.** The BBKFI and WBBK staking pools in Earn keep running as today, and single stakers do not need to do anything. Single staking will move to the new governance system in the near future; the details will be announced before anything changes.
+</Callout>
+
+## Move from V2 LP to V3
+
+You can prepare at any time. There is no rush: V2 LP farms keep full rewards for the first week after launch.
+
+<Steps>
+
+### Unstake and remove your V2 LP
+
+In **Liquidity → My positions**, open the V2 row's **Manage** menu, choose **Remove liquidity**, then **Unstake & remove**. Unstaking pays out your pending BBKFI. See [Stake or remove V2 liquidity](/guides/liquidity#stake-or-remove-v2-liquidity).
+
+### Create a V3 position in the same pair
+
+Select **Create position**, keep **V3**, choose the pair and the fee tier listed above, then pick your range and deposit. See [Concentrated liquidity (V3)](/guides/concentrated-liquidity).
+
+### Stake it in Farm V3 once it is live
+
+When Farm V3 launches, stake the position from the app. Until then, the position earns trading fees as any V3 position does.
+
+</Steps>
+
+<Callout type="warning">
+  Only the six pools above will be farmed. A position in another fee tier of the same pair, or in another pair, can be staked only if a farm is added for that pool later.
+</Callout>
+
+## Risks to evaluate
+
+- **Range risk:** out-of-range liquidity earns neither BBKFI nor fees until the price returns.
+- **Impermanent loss:** concentrated positions convert to the weaker asset faster when the price moves through the range.
+- **Reward value:** BBKFI per day is fixed by the schedule, not its price. APR changes with the BBKFI price and with staked liquidity.
+- **Admin controls:** the farm owner, the BitBlocks Safe multisig, can add pools, change pool weights, and switch on an emergency mode that pauses rewards while stakers can still withdraw their NFTs.
+- **Contract risk:** Farm V3 is a fork of the PancakeSwap MasterChef V3 and its liquidity-mining pools. Contract addresses will be listed in [Contract addresses](/contracts/addresses) at launch.

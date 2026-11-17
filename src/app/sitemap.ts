@@ -11,6 +11,7 @@ const ROUTES = [
   'guides/liquidity',
   'guides/concentrated-liquidity',
   'guides/earn',
+  'guides/farm-v3',
   'guides/governance',
   'guides/safety',
   'contracts',
